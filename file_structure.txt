@@ -1,0 +1,60 @@
+.
+├── AGENT_CONTEXT.md
+├── README.md
+├── docs
+│   ├── README.md
+│   ├── adr
+│   │   ├── ADR-0001-use-ubuntu-server-24-04.md
+│   │   ├── ADR-0002-use-k3s-for-local-cluster.md
+│   │   ├── ADR-0003-use-terraform-for-infra.md
+│   │   ├── ADR-0004-use-argocd-for-gitops.md
+│   │   └── README.md
+│   ├── agent
+│   │   ├── COPILOT_INSTRUCTIONS.md
+│   │   ├── DEFINITION_OF_DONE.md
+│   │   ├── STORY_TEMPLATE.md
+│   │   └── TASK_TEMPLATE.md
+│   ├── architecture
+│   │   ├── environments.md
+│   │   ├── naming-conventions.md
+│   │   ├── non-functional-requirements.md
+│   │   ├── roadmap.md
+│   │   └── target-architecture.md
+│   ├── backlog
+│   │   ├── README.md
+│   │   ├── epics.md
+│   │   ├── phase-00-architecture.md
+│   │   ├── phase-01-os.md
+│   │   ├── phase-02-network.md
+│   │   ├── phase-03-k3s.md
+│   │   ├── phase-04-observability.md
+│   │   ├── phase-05-terraform.md
+│   │   ├── phase-06-ci-cd.md
+│   │   ├── phase-07-finance-app-integration.md
+│   │   └── phase-08-hybrid-fleet.md
+│   ├── network
+│   │   ├── dns-and-tls.md
+│   │   ├── exposure-matrix.md
+│   │   ├── hybrid-connectivity.md
+│   │   ├── ip-plan.md
+│   │   └── network-overview.md
+│   ├── operations
+│   │   ├── backup-restore.md
+│   │   ├── bootstrap-checklist.md
+│   │   ├── host-setup.md
+│   │   ├── runbooks.md
+│   │   └── troubleshooting.md
+│   └── security
+│       ├── access-model.md
+│       ├── secrets-strategy.md
+│       ├── security-baseline.md
+│       └── supply-chain-notes.md
+├── file_structure.txt
+├── tasks
+│   ├── README.md
+│   ├── current-focus.md
+│   └── inbox.md
+└── terraform
+    └── README.md
+
+11 directories, 47 files
