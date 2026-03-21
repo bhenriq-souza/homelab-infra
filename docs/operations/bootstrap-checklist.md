@@ -1,10 +1,11 @@
 # Bootstrap Checklist
 
 ## Host
-- [ ] instalar Ubuntu Server 24.04 LTS
-- [ ] definir hostname do host como `hlb-beelink01`
-- [ ] configurar usuário `hlb-beelink01-admin` com sudo
-- [ ] habilitar SSH e iniciar janela curta de transição (24h)
+- [x] instalar Ubuntu Server 24.04 LTS
+- [x] definir hostname do host como `hlb-beelink01`
+- [x] configurar usuário `hlb-beelink01-admin` com sudo
+- [ ] confirmar OpenSSH instalado no setup e validar serviço ativo
+- [ ] iniciar janela curta de transição SSH (24h)
 - [ ] validar SSH por chave em 2 sessões independentes
 - [ ] validar reboot remoto e reconexão por chave
 - [ ] encerrar transição desabilitando senha no SSH

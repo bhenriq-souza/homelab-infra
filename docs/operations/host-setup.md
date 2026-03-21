@@ -3,6 +3,17 @@
 ## Objetivo
 Documentar, em ordem executável, a instalação e preparação do host físico on-prem que sustentará o laboratório.
 
+## Estado atual desta execução
+- Ubuntu Server 24.04 LTS já instalado no mini PC
+- OpenSSH Server já instalado durante o instalador
+- hostname definido: `hlb-beelink01`
+- usuário administrativo definido: `hlb-beelink01-admin`
+- conexão do host: cabo ethernet
+- estratégia de IP estável escolhida: reserva DHCP no roteador
+- IP observado do host na LAN: `192.168.15.97`
+- MAC observado no roteador: `78:55:36:05:22:CA`
+- acesso operacional no momento: somente SSH
+
 ## Resultado esperado da fase
 - Ubuntu Server 24.04 LTS instalado no mini PC
 - host com hostname `hlb-beelink01`
@@ -20,13 +31,33 @@ Documentar, em ordem executável, a instalação e preparação do host físico 
 
 ## Passo a passo
 
-### 1. Preparar BIOS/UEFI do mini PC
+### 1. Pós-instalação imediata do Ubuntu Server
+- confirmar identidade do host e usuário administrativo definidos na instalação
+- confirmar que o host recebeu IP na LAN e tem saída para internet
+- confirmar que o cabo ethernet está ativo como interface principal
+- registrar dados básicos do host para inventário operacional:
+	- hostname: `hlb-beelink01`
+	- usuário administrativo: `hlb-beelink01-admin`
+	- interface principal (ethernet): `<interface-principal>`
+	- MAC address da interface principal: `78:55:36:05:22:CA`
+	- IP atual recebido por DHCP: `192.168.15.97`
+
+Comandos de validação:
+
+```bash
+hostnamectl
+whoami
+ip -br a
+ip r
+```
+
+### 2. Preparar BIOS/UEFI do mini PC
 - atualizar BIOS/UEFI para versão estável mais recente do fabricante
 - habilitar boot UEFI
 - definir pendrive como primeiro dispositivo de boot para a instalação
 - manter virtualização habilitada
 
-### 2. Instalar Ubuntu Server 24.04 LTS
+### 3. Instalar Ubuntu Server 24.04 LTS
 - iniciar o instalador pelo pendrive
 - selecionar idioma e layout de teclado
 - configurar disco conforme simplicidade operacional:
@@ -34,12 +65,15 @@ Documentar, em ordem executável, a instalação e preparação do host físico 
 	- swap: manter padrão sugerido pelo instalador
 - selecionar instalação de OpenSSH Server durante o instalador
 
-### 3. Definir identidade do host
+Observação:
+- nesta execução, o OpenSSH já foi instalado no instalador.
+
+### 4. Definir identidade do host
 - hostname definido para o projeto: `hlb-beelink01`
 - criar usuário administrativo local: `hlb-beelink01-admin`
 - usar senha forte e única para acesso local
 
-### 4. Garantir acesso administrativo
+### 5. Garantir acesso administrativo
 - confirmar que o usuário administrativo tem permissão de sudo
 - validar login local com o usuário criado
 
@@ -51,12 +85,39 @@ sudo -l
 hostnamectl
 ```
 
-### 5. Configurar SSH para acesso remoto
+### 6. Configurar e validar OpenSSH
 - confirmar serviço SSH ativo após boot
 - cadastrar chave pública do laptop em `~/.ssh/authorized_keys` do usuário administrativo
 - iniciar janela curta de transição para migração segura (recomendação: 24 horas)
 
-#### 5.1. Janela curta de transição SSH (24h)
+Comandos de validação do serviço:
+
+```bash
+sudo systemctl status ssh
+sudo systemctl is-enabled ssh
+sudo ss -tulpen | grep ':22'
+```
+
+#### 6.1. Preparar chave SSH do laptop (Windows 11 + Ubuntu WSL)
+- no laptop, gerar par de chaves caso ainda não exista
+- copiar apenas a chave pública para o host
+- no host, garantir permissões corretas de diretório e arquivo
+
+Comandos no laptop (WSL):
+
+```bash
+ssh-keygen -t ed25519 -C "hlb-laptop-admin"
+ssh-copy-id hlb-beelink01-admin@<ip-do-host>
+```
+
+Comandos no host:
+
+```bash
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+```
+
+#### 6.2. Janela curta de transição SSH (24h)
 - durante a transição, manter senha temporariamente habilitada apenas para contingência
 - validar acesso por chave em duas sessões independentes a partir do laptop
 - validar sudo remoto e reboot remoto antes de desabilitar senha
@@ -88,19 +149,24 @@ Após o host voltar:
 - confirmar que sudo continua funcional
 - somente então avançar para desabilitar senha no SSH
 
-Comandos de validação:
+#### 6.3. Validar acesso remoto do laptop para o mini PC pela LAN
+- validar resolução por IP reservado (obrigatório)
+- resolução por hostname local fica opcional e adiada para fase futura
+- validar acesso remoto após reboot do host
+
+Comandos no laptop (WSL):
 
 ```bash
-sudo systemctl status ssh
-ss -tulpen | grep ':22'
+ssh -o PreferredAuthentications=publickey hlb-beelink01-admin@<ip-reservado-mini-pc>
+ssh -o PreferredAuthentications=publickey hlb-beelink01-admin@hlb-beelink01
 ```
 
-### 6. Definir IP estável
+### 7. Definir IP estável
 - abordagem mandatória para este projeto: reserva DHCP no roteador (MitraStar Vivo)
 - usar IP dentro da rede `192.168.15.0/24` e fora de conflitos já existentes
 - registrar IP final no inventário operacional
 
-#### 6.1. Procedimento no MitraStar GPT-2742GX4X5v6
+#### 7.1. Procedimento no MitraStar GPT-2742GX4X5v6
 - acessar: Configurações > Rede Local > DHCP
 - confirmar que DHCP está habilitado
 - identificar o mini PC na tabela de renovação por hostname/MAC
@@ -123,7 +189,7 @@ ip r
 ip -br link
 ```
 
-### 7. Aplicar updates iniciais
+### 8. Aplicar updates iniciais
 - atualizar índice de pacotes
 - aplicar atualizações de segurança e correções recomendadas
 - reiniciar o host se kernel ou componentes críticos forem atualizados
@@ -137,10 +203,11 @@ sudo apt autoremove -y
 sudo reboot
 ```
 
-### 8. Aplicar baseline de segurança inicial
+### 9. Aplicar baseline de segurança inicial (SSH)
 - manter autenticação por chave SSH como padrão operacional
 - desabilitar login root por SSH
 - após a janela de transição, desabilitar autenticação por senha no SSH
+- reduzir vetores de brute force com configurações adicionais iniciais
 - habilitar firewall com política mínima de entrada
 - na Fase 01, liberar somente OpenSSH no firewall
 
@@ -150,6 +217,9 @@ Referência de configuração (`/etc/ssh/sshd_config`):
 PermitRootLogin no
 PasswordAuthentication no
 PubkeyAuthentication yes
+KbdInteractiveAuthentication no
+MaxAuthTries 3
+LoginGraceTime 30
 ```
 
 Comandos de validação:
@@ -164,7 +234,7 @@ sudo ufw --force enable
 sudo ufw status verbose
 ```
 
-### 9. Encerrar janela de transição SSH
+### 10. Encerrar janela de transição SSH
 - editar `sshd_config` para bloquear autenticação por senha
 - validar sintaxe da configuração
 - reiniciar serviço SSH
@@ -178,6 +248,14 @@ sudoedit /etc/ssh/sshd_config
 sudo sshd -t
 sudo systemctl restart ssh
 ```
+
+## Recomendações iniciais de segurança para SSH
+- manter somente autenticação por chave para o usuário administrativo
+- não habilitar login SSH como root
+- manter porta padrão SSH `22` nesta fase para reduzir complexidade operacional
+- não expor porta SSH para internet nesta fase; acesso apenas pela LAN
+- manter o host atualizado e revisar configurações SSH a cada mudança de fase
+- registrar no inventário qualquer mudança de porta, usuário administrativo ou política de autenticação
 
 ## Critérios de conclusão deste documento
 - acesso SSH por chave funcionando para o usuário administrativo

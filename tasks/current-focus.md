@@ -1,26 +1,29 @@
 # Current Focus
 
 ## Objetivo atual
-Detalhar a Fase 01 do projeto, preparando a documentação operacional para instalação e baseline do host on-prem.
+Concluir a preparação do host on-prem após a instalação do Ubuntu Server, consolidando o acesso SSH e iniciando a definição da rede local.
 
 ## Escopo
 - refinar `docs/operations/host-setup.md`
 - refinar `docs/backlog/phase-01-os.md`
-- alinhar `docs/operations/bootstrap-checklist.md` com a fase 01
+- refinar `docs/network/network-overview.md`
+- refinar `docs/network/ip-plan.md`
+- atualizar `docs/operations/bootstrap-checklist.md` se necessário
 
 ## Resultado esperado
-- documentação clara e executável para instalação do Ubuntu Server 24.04 LTS
-- definição inicial de passos de setup do host
-- critérios de aceite objetivos para a fase 01
+- documentação clara para configuração segura do SSH
+- definição inicial de rede local para acesso do laptop ao mini PC
+- placeholders e decisões pendentes explícitas para conectividade híbrida futura
 
 ## Fora de escopo
-- scripts de automação
-- Terraform
-- conectividade híbrida
 - instalação de K3s
+- criação de Terraform
+- configuração de Argo CD
+- implementação de VPN híbrida com GCP
 - observabilidade
 
 ## Critérios de aceite
-- a fase 01 pode ser executada por checklist
-- o documento de host setup está claro e ordenado
-- as dependências para a fase 02 ficam explícitas
+- o setup pós-instalação do host está documentado
+- o acesso SSH está coberto por checklist e boas práticas
+- existe uma primeira versão do plano de IP local
+- dependências para a fase de rede híbrida estão listadas
