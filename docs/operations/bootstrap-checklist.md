@@ -4,15 +4,15 @@
 - [x] instalar Ubuntu Server 24.04 LTS
 - [x] definir hostname do host como `hlb-beelink01`
 - [x] configurar usuário `hlb-beelink01-admin` com sudo
-- [ ] confirmar OpenSSH instalado no setup e validar serviço ativo
-- [ ] iniciar janela curta de transição SSH (24h)
-- [ ] validar SSH por chave em 2 sessões independentes
-- [ ] validar reboot remoto e reconexão por chave
+- [x] confirmar OpenSSH instalado no setup e validar serviço ativo
+- [x] iniciar janela curta de transição SSH (24h)
+- [x] validar SSH por chave em 2 sessões independentes
+- [x] validar reboot remoto e reconexão por chave
 - [ ] encerrar transição desabilitando senha no SSH
-- [ ] definir IP estável com reserva DHCP no MitraStar (hostname + MAC + IP)
-- [ ] aplicar updates iniciais (`apt update`, `apt full-upgrade`)
+- [x] definir IP estável com reserva DHCP no MitraStar (hostname + MAC + IP)
+- [x] aplicar updates iniciais (`apt update`, `apt full-upgrade`)
 - [ ] aplicar baseline de segurança (sshd + UFW com somente OpenSSH liberado)
-- [ ] validar conectividade do laptop para o host
+- [x] validar conectividade do laptop para o host
 
 ## Infra
 - [ ] criar estrutura inicial do repositório

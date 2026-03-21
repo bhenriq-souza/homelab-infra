@@ -68,7 +68,23 @@ Preparar o host on-prem com um sistema operacional estável e seguro.
 ## Encerramento da fase 01
 Concluir a fase somente quando todos os critérios de aceite forem atendidos e as evidências mínimas estiverem registradas em documentação operacional.
 
-Data formal de encerramento desta fase: `2026-03-21`
+Status atual da fase: `em andamento`
+Data de referência do status: `2026-03-21`
+
+### Progresso confirmado até esta data
+- Ubuntu Server instalado e operacional no mini PC
+- host identificado como `hlb-beelink01`
+- usuário administrativo `hlb-beelink01-admin` funcional
+- OpenSSH ativo e porta 22 em escuta
+- acesso remoto via SSH validado
+- login por chave validado
+- reboot remoto validado
+- reserva DHCP confirmada para o host
+
+### Pendências para encerramento formal
+- concluir transição para autenticação SSH somente por chave
+- garantir diretivas completas de hardening SSH ativas na configuração efetiva
+- habilitar firewall (UFW) com política de entrada restritiva e OpenSSH liberado
 
 Checklist de encerramento:
 - confirmar que o host está acessível do laptop exclusivamente por SSH na LAN

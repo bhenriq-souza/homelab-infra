@@ -14,6 +14,25 @@ Documentar, em ordem executável, a instalação e preparação do host físico 
 - MAC observado no roteador: `78:55:36:05:22:CA`
 - acesso operacional no momento: somente SSH
 
+## Registro da execução em 2026-03-21
+
+### Concluído hoje
+- primeiro acesso SSH ao host validado a partir do laptop
+- login por chave pública validado
+- reboot remoto validado com retorno de conectividade
+- reserva DHCP do mini PC confirmada no roteador
+- identificação do host validada (`hostnamectl` e `ip -4 a`)
+
+### Decisões tomadas hoje
+- manter porta SSH padrão `22`
+- manter autenticação por senha temporariamente habilitada
+- adiar resolução por hostname local para fase futura
+
+### Pendências abertas para concluir baseline de segurança
+- desabilitar autenticação por senha no SSH após nova janela de validação por chave
+- consolidar diretivas de hardening em `sshd_config` e validar configuração efetiva
+- habilitar UFW com política mínima (deny incoming + OpenSSH liberado)
+
 ## Resultado esperado da fase
 - Ubuntu Server 24.04 LTS instalado no mini PC
 - host com hostname `hlb-beelink01`
@@ -263,6 +282,8 @@ sudo systemctl restart ssh
 - host com IP estável e hostname definido
 - pacotes atualizados sem pendências críticas
 - baseline de segurança aplicada e validada
+
+Status atual deste documento: `parcialmente atendido`.
 
 ## Evidências mínimas a registrar
 - saída de `hostnamectl`
