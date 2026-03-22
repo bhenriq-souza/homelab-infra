@@ -1,24 +1,30 @@
 # IP Plan
 
-## Status
-- este documento inicia o planejamento da LAN local
-- valores ainda não definidos devem permanecer como placeholder
-- preencher antes de avançar para a fase de conectividade híbrida
-- reserva DHCP do mini PC concluída no roteador
+## Objetivo
+- consolidar a LAN local como primeiro bloco real do plano de endereçamento
+- registrar o estado atual já validado (host on-prem + SSH + DHCP reservado)
+- manter placeholders apenas para blocos ainda não definidos (cluster e cloud)
 
-## LAN local
-- nome da rede local: `homelab`
-- CIDR: `192.168.15.0/24`
+## LAN local (estado atual)
+
+### Bloco real de enderecamento
+- nome logico da LAN: `homelab`
+- CIDR da LAN: `192.168.15.0/24`
 - gateway: `192.168.15.1`
-- DNS primário entregue por DHCP: `192.168.15.1`
-- DNS secundário entregue por DHCP: `n/a (uso padrão do roteador/operadora)`
-- faixa DHCP dinâmica do roteador: `192.168.15.2-192.168.15.200`
-- política de IP estável do mini PC: `DHCP reservado`
-- hostname do mini PC: `hlb-beelink01`
-- interface principal do mini PC: `ethernet`
-- MAC da interface principal: `78:55:36:05:22:CA`
+- faixa DHCP do roteador: `192.168.15.2-192.168.15.200`
 - IP reservado do mini PC: `192.168.15.97`
+
+### Metadados operacionais
+- politica de IP estavel do mini PC: `DHCP reservado`
+- hostname do mini PC: `hlb-beelink01`
 - origem da reserva: `roteador Vivo MitraStar`
+- acesso administrativo atual: `SSH via LAN`
+
+### Observacoes relevantes
+- mini PC e laptop estao na mesma LAN local
+- nao ha necessidade de exposicao publica nesta etapa
+- o objetivo imediato e estabilidade de acesso administrativo local
+- qualquer mudanca de IP/DHCP deve ser registrada aqui antes da aplicacao
 
 ### Validações mínimas da LAN
 - laptop alcança o mini PC por SSH no IP reservado
@@ -26,8 +32,8 @@
 - gateway responde a partir do mini PC
 - IP reservado permanece estável após reboot do mini PC
 
-### Inventário de endpoints locais (preencher)
-- laptop administrativo (Windows 11 + WSL): `DHCP dinâmico (sem reserva)`
+### Inventario de endpoints locais
+- laptop administrativo (Windows 11 + WSL): `DHCP dinamico (sem reserva)`
 - mini PC host principal: `192.168.15.97`
 - roteador/gateway: `192.168.15.1`
 
@@ -36,29 +42,30 @@
 - não é necessário criar uma LAN separada no roteador nesta fase
 - para reduzir risco operacional, o IP reservado do mini PC foi mantido igual ao IP atual observado
 
-## Estratégia de DNS (intenção por fases)
-- fase atual (concluindo baseline): manter DNS padrão entregue pelo roteador/operadora
-- próxima etapa após esta fase inicial: migrar para DNS público no roteador (Cloudflare/Google/Quad9)
-- etapa futura de evolução: avaliar DNS local com Pi-hole ou AdGuard Home
+## Estrategia de DNS (planejamento)
+- fase atual: manter DNS padrao entregue pelo roteador/operadora
+- fase futura: avaliar DNS publico e/ou DNS local dedicado
+- status: `nao alterar agora; manter como decisao futura`
 
-### Critérios para avançar a estratégia de DNS
-- somente alterar DNS após estabilidade do acesso SSH ao mini PC
-- registrar qualquer mudança de DNS neste documento antes da aplicação
-- validar navegação e resolução de nomes no laptop e no mini PC após a mudança
+### Criterios para evoluir DNS
+- somente alterar DNS apos estabilidade comprovada do acesso SSH
+- registrar qualquer mudanca de DNS neste documento antes da aplicacao
+- validar navegacao e resolucao de nomes no laptop e no mini PC apos a mudanca
 
-## Cluster local
+## Cluster local (definir depois)
 - pod CIDR: `<k3s-pod-cidr-futuro>`
 - service CIDR: `<k3s-service-cidr-futuro>`
 - ingress hostname/IP: `<ingress-futuro>`
-- status: `fora do escopo da fase atual`
+- status: `pendente; fora do escopo desta etapa`
 
-## GCP
+## Cloud (GCP - definir depois)
 - VPC CIDR: `<gcp-vpc-cidr-futuro>`
 - subnet principal: `<gcp-subnet-futura>`
 - IPs reservados relevantes: `<reservas-futuras>`
-- status: `conectividade híbrida será tratada em fase posterior`
+- status: `pendente; conectividade hibrida sera tratada em fase posterior`
 
 ## Regras
-- não permitir sobreposição entre LAN, cluster local e cloud
-- qualquer alteração deve ser documentada antes da implementação
-- não promover conectividade híbrida antes da LAN local estar estável
+- nao permitir sobreposicao entre LAN, cluster local e cloud
+- qualquer alteracao deve ser documentada antes da implementacao
+- ranges de cluster local e cloud devem ser definidos depois, sem conflito com a LAN atual
+- nao promover conectividade hibrida antes da LAN local estar estavel

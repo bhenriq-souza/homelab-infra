@@ -8,11 +8,10 @@ Definir a conectividade entre:
 - VPC na GCP
 - componentes administrativos e operacionais
 
-## Sequência por fases (estado atual)
-1. primeiro passo: consolidar rede local (LAN) para operação do host
-2. garantir acesso remoto do laptop ao mini PC exclusivamente pela LAN
-3. documentar plano de IP local (gateway, DHCP e IP reservado do mini PC)
-4. tratar conectividade híbrida com GCP somente em fase posterior do roadmap
+## Sequencia por fases
+1. fase atual: consolidar LAN local para operacao do host e acesso administrativo via SSH
+2. fase futura 1: habilitar conectividade privada simples on-prem + cloud para administracao e testes
+3. fase futura 2: evoluir para conectividade hibrida mais proxima de site-to-site
 
 ## Estado atual da conectividade
 - mini PC conectado por cabo ethernet na LAN doméstica
@@ -20,6 +19,11 @@ Definir a conectividade entre:
 - laptop administrativo em Windows 11 com Ubuntu no WSL
 - requisito imediato: acesso estável do laptop ao host `hlb-beelink01` na rede local
 - conectividade híbrida (VPN/túnel/peering) ainda não iniciada
+
+## Evolucao futura (planejada)
+- conectividade privada com GCP sera tratada apenas em fases futuras
+- nao ha implementacao de conectividade hibrida nesta etapa
+- fleet/multi-cluster nao substitui conectividade de rede entre ambientes
 
 ## Primeira meta de rede (fase atual)
 - o mini PC deve ser acessível do laptop pela LAN usando o IP reservado
