@@ -1,21 +1,83 @@
 # IP Plan
 
-## LAN local
-- CIDR:
-- gateway:
-- faixa DHCP:
-- IP reservado do mini PC:
+## Objetivo
+- consolidar a LAN local como primeiro bloco real do plano de endereçamento
+- registrar o estado atual já validado (host on-prem + SSH + DHCP reservado)
+- propor ranges iniciais do cluster local sem conflito com a LAN
+- manter placeholders apenas para blocos ainda não definidos (cloud e ingress final)
 
-## Cluster local
-- pod CIDR:
-- service CIDR:
-- ingress hostname/IP:
+## LAN local (estado atual)
 
-## GCP
-- VPC CIDR:
-- subnet principal:
-- IPs reservados relevantes:
+### Bloco real de enderecamento
+- nome logico da LAN: `homelab`
+- CIDR da LAN: `192.168.15.0/24`
+- gateway: `192.168.15.1`
+- faixa DHCP do roteador: `192.168.15.2-192.168.15.200`
+- IP reservado do mini PC: `192.168.15.97`
+
+### Metadados operacionais
+- politica de IP estavel do mini PC: `DHCP reservado`
+- hostname do mini PC: `hlb-beelink01`
+- origem da reserva: `roteador Vivo MitraStar`
+- acesso administrativo atual: `SSH via LAN`
+
+### Observacoes relevantes
+- mini PC e laptop estao na mesma LAN local
+- nao ha necessidade de exposicao publica nesta etapa
+- o objetivo imediato e estabilidade de acesso administrativo local
+- qualquer mudanca de IP/DHCP deve ser registrada aqui antes da aplicacao
+
+### Validações mínimas da LAN
+- laptop alcança o mini PC por SSH no IP reservado
+- não há conflito entre IP reservado e faixa dinâmica do DHCP
+- gateway responde a partir do mini PC
+- IP reservado permanece estável após reboot do mini PC
+
+### Inventario de endpoints locais
+- laptop administrativo (Windows 11 + WSL): `DHCP dinamico (sem reserva)`
+- mini PC host principal: `192.168.15.97`
+- roteador/gateway: `192.168.15.1`
+
+### Notas de decisão
+- o nome `homelab` é um rótulo de documentação para identificar a LAN atual
+- não é necessário criar uma LAN separada no roteador nesta fase
+- para reduzir risco operacional, o IP reservado do mini PC foi mantido igual ao IP atual observado
+
+## Estrategia de DNS (planejamento)
+- fase atual: manter DNS padrao entregue pelo roteador/operadora
+- fase futura: avaliar DNS publico e/ou DNS local dedicado
+- status: `nao alterar agora; manter como decisao futura`
+
+### Criterios para evoluir DNS
+- somente alterar DNS apos estabilidade comprovada do acesso SSH
+- registrar qualquer mudanca de DNS neste documento antes da aplicacao
+- validar navegacao e resolucao de nomes no laptop e no mini PC apos a mudanca
+
+## Cluster local (proposta inicial para Fase 03)
+- pod CIDR: `10.42.0.0/16`
+- service CIDR: `10.43.0.0/16`
+- ingress hostname/IP final: `<ingress-futuro>`
+- status: `pod/service definidos para bootstrap local; ingress final pendente`
+
+### Justificativa tecnica
+- a LAN atual utiliza `192.168.15.0/24`, sem sobreposição com `10.42.0.0/16` e `10.43.0.0/16`
+- os ranges propostos seguem padrão comum de instalação do K3s, reduzindo complexidade inicial
+- a decisão de ingress final permanece aberta para evitar acoplamento precoce
+
+### Validacao de nao conflito (estado atual)
+- LAN local: `192.168.15.0/24`
+- Pod CIDR local: `10.42.0.0/16`
+- Service CIDR local: `10.43.0.0/16`
+- resultado: `sem sobreposicao entre LAN e rede interna do cluster`
+
+## Cloud (GCP - definir depois)
+- VPC CIDR: `<gcp-vpc-cidr-futuro>`
+- subnet principal: `<gcp-subnet-futura>`
+- IPs reservados relevantes: `<reservas-futuras>`
+- status: `pendente; conectividade hibrida sera tratada em fase posterior`
 
 ## Regras
-- não permitir sobreposição entre LAN, cluster local e cloud
-- qualquer alteração deve ser documentada antes da implementação
+- nao permitir sobreposicao entre LAN, cluster local e cloud
+- qualquer alteracao deve ser documentada antes da implementacao
+- ranges de cloud devem ser definidos depois, sem conflito com LAN e cluster local
+- nao promover conectividade hibrida antes da LAN local estar estavel
