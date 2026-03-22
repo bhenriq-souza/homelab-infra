@@ -21,11 +21,12 @@
 - [ ] definir naming e ranges IP
 
 ## Plataforma
-- [ ] instalar K3s single-node no mini PC
-- [ ] validar serviço `k3s` ativo e habilitado no boot
-- [ ] validar `kubectl get nodes` com 1 nó `Ready`
-- [ ] validar pods do `kube-system` sem falhas persistentes
-- [ ] confirmar Pod CIDR `10.42.0.0/16` e Service CIDR `10.43.0.0/16`
-- [ ] criar namespaces base (`platform-system`, `apps`)
+- [x] instalar K3s single-node no mini PC
+- [x] validar serviço `k3s` ativo e habilitado no boot
+- [x] validar `kubectl get nodes` com 1 nó `Ready`
+- [x] validar pods do `kube-system` sem falhas persistentes
+- [x] confirmar Pod CIDR `10.42.0.0/16` e Service CIDR `10.43.0.0/16`
+- [x] validar acesso remoto via kubeconfig no laptop (`~/.kube/config-homelab.yaml`)
+- [x] criar namespaces base (`platform-system`, `apps`)
 - [ ] preparar conectividade híbrida
 - [ ] preparar fundação cloud

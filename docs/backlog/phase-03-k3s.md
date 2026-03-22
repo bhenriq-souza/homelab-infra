@@ -161,3 +161,27 @@ Observação:
 - mitigação: usar CIDRs `10.42.0.0/16` e `10.43.0.0/16`, mantendo revisão antes da fase híbrida
 - risco: falha de acesso administrativo pós-instalação
 - mitigação: manter SSH validado e registrar procedimento de recuperação do serviço `k3s`
+
+## Registro de execução (2026-03-22)
+
+### Evidências confirmadas
+- kubeconfig administrativo salvo no laptop com permissões restritas (`600`)
+- endpoint remoto do cluster confirmado: `https://192.168.15.97:6443`
+- serviço `k3s` habilitado no boot (`systemctl is-enabled k3s` = `enabled`)
+- nó único do cluster em estado `Ready`:
+	- nome: `hlb-beelink01`
+	- role: `control-plane`
+	- versão: `v1.34.5+k3s1`
+	- internal IP: `192.168.15.97`
+- `kube-system` com componentes principais em execução:
+	- `coredns`, `metrics-server`, `local-path-provisioner`, `traefik`
+	- jobs de instalação do Traefik em `Completed`
+- namespaces base criados e ativos:
+	- `platform-system`
+	- `apps`
+
+### Status atual da fase
+- instalação inicial do K3s: `concluída`
+- acesso remoto via kubeconfig no laptop: `concluído`
+- criação de namespaces base (`platform-system`, `apps`): `concluída`
+- validação explícita de `k3s` habilitado no boot (`systemctl is-enabled k3s`): `concluída`
