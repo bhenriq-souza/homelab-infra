@@ -124,7 +124,7 @@ Ao final desta fase, o repositório deve possuir:
 - [x] revisar documentação impactada (Terraform e GitOps)
 - [ ] aplicar Terraform no cluster (`shared`, `dev`, `prd`)
 - [ ] validar Argo CD e sincronização das aplicações raiz
-- [ ] ajustar `repoURL` final nos manifests GitOps e tfvars de `shared`
+- [ ] ajustar `repoURL` final nos manifests GitOps (`shared-platform`, `dev-workloads`, `prd-workloads`)
 - [ ] registrar evidências operacionais de validação da fase
 - [ ] registrar decisões complementares, se necessário
 
@@ -146,8 +146,12 @@ Ao final desta fase, o repositório deve possuir:
 ### Pendente para encerrar a fase
 - executar o bootstrap no cluster local e validar sucesso end-to-end
 - confirmar saúde do Argo CD (`argocd` namespace, pods, aplicação raiz e apps filhas)
-- substituir URLs placeholder (`https://github.com/your-org/homelab-infra.git`) pela URL real do repositório
+- substituir URLs placeholder (`https://github.com/your-org/homelab-infra.git`) nos manifests de bootstrap do GitOps
 - salvar evidências de validação (comandos e resultados) para fechamento da fase
+
+### Atualização recente
+- `terraform/environments/shared/terraform.tfvars` já está apontando para o repositório real e com versão de chart/contexto definidos.
+- permanece pendente ajustar os `repoURL` dos arquivos em `gitops/bootstrap/root/applications/`.
 
 ## Próximo passo após esta fase
 Phase 05 — Observabilidade via GitOps
