@@ -3,7 +3,8 @@
 ## Objetivo
 - consolidar a LAN local como primeiro bloco real do plano de endereçamento
 - registrar o estado atual já validado (host on-prem + SSH + DHCP reservado)
-- manter placeholders apenas para blocos ainda não definidos (cluster e cloud)
+- propor ranges iniciais do cluster local sem conflito com a LAN
+- manter placeholders apenas para blocos ainda não definidos (cloud e ingress final)
 
 ## LAN local (estado atual)
 
@@ -52,11 +53,22 @@
 - registrar qualquer mudanca de DNS neste documento antes da aplicacao
 - validar navegacao e resolucao de nomes no laptop e no mini PC apos a mudanca
 
-## Cluster local (definir depois)
-- pod CIDR: `<k3s-pod-cidr-futuro>`
-- service CIDR: `<k3s-service-cidr-futuro>`
-- ingress hostname/IP: `<ingress-futuro>`
-- status: `pendente; fora do escopo desta etapa`
+## Cluster local (proposta inicial para Fase 03)
+- pod CIDR: `10.42.0.0/16`
+- service CIDR: `10.43.0.0/16`
+- ingress hostname/IP final: `<ingress-futuro>`
+- status: `pod/service definidos para bootstrap local; ingress final pendente`
+
+### Justificativa tecnica
+- a LAN atual utiliza `192.168.15.0/24`, sem sobreposição com `10.42.0.0/16` e `10.43.0.0/16`
+- os ranges propostos seguem padrão comum de instalação do K3s, reduzindo complexidade inicial
+- a decisão de ingress final permanece aberta para evitar acoplamento precoce
+
+### Validacao de nao conflito (estado atual)
+- LAN local: `192.168.15.0/24`
+- Pod CIDR local: `10.42.0.0/16`
+- Service CIDR local: `10.43.0.0/16`
+- resultado: `sem sobreposicao entre LAN e rede interna do cluster`
 
 ## Cloud (GCP - definir depois)
 - VPC CIDR: `<gcp-vpc-cidr-futuro>`
@@ -67,5 +79,5 @@
 ## Regras
 - nao permitir sobreposicao entre LAN, cluster local e cloud
 - qualquer alteracao deve ser documentada antes da implementacao
-- ranges de cluster local e cloud devem ser definidos depois, sem conflito com a LAN atual
+- ranges de cloud devem ser definidos depois, sem conflito com LAN e cluster local
 - nao promover conectividade hibrida antes da LAN local estar estavel

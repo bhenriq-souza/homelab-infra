@@ -1,26 +1,28 @@
 # Current Focus
 
 ## Objetivo atual
-Consolidar a documentação de rede do laboratório com base no host já validado, no acesso SSH funcional e no DHCP reservado para o mini PC.
+Preparar a instalação inicial do cluster local K3s no mini PC já validado, definindo a estratégia de instalação e os parâmetros mínimos de rede do cluster.
 
 ## Escopo
+- atualizar `docs/backlog/phase-03-k3s.md`
+- atualizar `docs/operations/bootstrap-checklist.md` apenas se necessário
 - atualizar `docs/network/ip-plan.md`
-- atualizar `docs/network/hybrid-connectivity.md`
-- atualizar `docs/network/network-overview.md` apenas se necessário para consistência
+- atualizar `docs/operations/host-setup.md` apenas se necessário para registrar dependências do cluster
 
 ## Resultado esperado
-- plano de IP com os dados reais já conhecidos da LAN local
-- estratégia de conectividade híbrida documentada em fases
-- separação clara entre rede local atual e evolução futura para integração com GCP
+- fase 03 detalhada e executável
+- proposta inicial para Pod CIDR e Service CIDR sem conflito com a LAN
+- decisão documentada sobre instalação K3s single-node
+- estratégia inicial documentada para ingress embutido ou desabilitado
 
 ## Fora de escopo
-- instalação de K3s
-- criação de Terraform
-- configuração de VPN real
-- configuração da VPC na GCP
-- alterações em ADRs
+- observabilidade
+- Argo CD
+- Terraform
+- conectividade híbrida implementada
+- instalação de aplicações no cluster
 
 ## Critérios de aceite
-- `ip-plan.md` reflete o estado atual conhecido da LAN
-- `hybrid-connectivity.md` descreve a evolução da conectividade híbrida em etapas
-- decisões pendentes ficam explícitas
+- a instalação inicial do K3s está documentada de forma clara
+- os ranges básicos do cluster estão definidos ou propostos
+- dependências e decisões pendentes estão explícitas
