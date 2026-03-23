@@ -1,14 +1,10 @@
-# Phase 04 - Observability
+# Phase 04 - Observability (superseded)
 
-## Objetivo
-Definir a stack mínima de observabilidade e seus requisitos.
+Este documento ficou desatualizado apos o realinhamento do roadmap.
 
-## Macrotarefas
-- documentar stack mínima
-- definir requisitos de retenção
-- definir responsabilidades entre infra e GitOps
-- definir exposição e acesso aos componentes
+Status:
+- o conteudo de observabilidade foi movido para `Phase 05`
+- a fase 04 atual representa a fundacao `IaC + GitOps`
 
-## Critérios de aceite
-- arquitetura mínima de observabilidade documentada
-- dependências registradas
+Referencia atual:
+- `docs/backlog/phase-05-observability.md`
