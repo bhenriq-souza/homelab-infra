@@ -20,18 +20,30 @@ spec:
     spec:
       containers:
         - name: myapp
-          image: ghcr.io/bhenriq-souza/myapp:0.1.0
+          image: kennethreitz/httpbin:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8080
+            - containerPort: 80
               name: http
           env:
             - name: APP_ENV
               value: dev
+          livenessProbe:
+            httpGet:
+              path: /status/200
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /status/200
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
           resources:
             requests:
               cpu: 50m
-              memory: 64Mi
+              memory: 96Mi
             limits:
               cpu: 200m
               memory: 256Mi

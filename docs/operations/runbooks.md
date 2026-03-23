@@ -243,3 +243,61 @@ Acao:
 - saida de `kubectl get nodes`
 - saida de `kubectl -n argocd get pods`
 - saida de `kubectl -n argocd get applications.argoproj.io`
+
+## Runbook - Validacao de app de teste e logs
+
+### Objetivo
+Validar rapidamente um workload HTTP de teste no ambiente logico `dev`, incluindo chamadas de sucesso, erro e verificacao de logs de aplicacao.
+
+### Escopo
+- validar resposta HTTP 200
+- validar resposta HTTP de erro (500)
+- confirmar geracao de logs no stdout do container
+
+### Pre-check
+1. Confirmar que os apps GitOps de workload estao `Synced` e `Healthy` no Argo CD.
+2. Confirmar pods do app em execucao.
+
+```bash
+kubectl -n dev-apps get pods -l app.kubernetes.io/name=myapp
+```
+
+### Teste HTTP (sucesso e erro)
+3. Testar endpoint de sucesso (200) no ambiente `dev`.
+
+```bash
+kubectl -n dev-apps port-forward svc/myapp 18080:80
+curl -i http://127.0.0.1:18080/get
+```
+
+Resultado esperado:
+- status `200 OK`
+- payload JSON retornado pelo servico
+
+4. Testar endpoint de erro controlado (500) no ambiente `dev`.
+
+```bash
+curl -i http://127.0.0.1:18080/status/500
+```
+
+Resultado esperado:
+- status `500 Internal Server Error`
+
+### Validacao de logs de aplicacao
+6. Consultar logs do deployment em `dev`.
+
+```bash
+kubectl -n dev-apps logs deploy/myapp --tail=100
+```
+
+Resultado esperado:
+- entradas de log das requisicoes `GET /get`
+- entradas de log das requisicoes `GET /status/500`
+
+### Criterios de aceite operacionais
+- app responde `200` no endpoint de sucesso
+- app responde `500` no endpoint de erro controlado
+- logs mostram as requisicoes realizadas no ambiente `dev`
+
+### Evolucao posterior
+- promover o mesmo app de teste para `prd` apenas quando a fase de validacao em `dev` estiver concluida
