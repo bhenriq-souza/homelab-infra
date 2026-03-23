@@ -13,7 +13,11 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 - base Terraform criada com entrypoints `shared`, `dev` e `prd`
 - Argo CD bootstrapado com Terraform
 - sincronizacao Argo CD <-> repositorio validada
-- workloads de exemplo em `dev`/`prd` podem falhar por imagem ausente no registry, sem bloquear observabilidade
+- `shared-observability` sincronizado e saudavel no Argo CD
+- Prometheus e Grafana operacionais para metricas basicas da plataforma
+- app de teste em `dev` (`myapp` com `httpbin`) validado com respostas de sucesso e erro
+- logs da aplicacao validados no cluster (stdout/stderr via Kubernetes/Argo CD)
+- rollout de workload de teste mantido apenas em `dev` neste momento
 
 ## Escopo desta fase (phase-05)
 - adicionar stack inicial de metricas e dashboards no escopo compartilhado do cluster
@@ -42,6 +46,17 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 - dashboards iniciais com visibilidade de node, pods e namespaces
 - documentacao principal atualizada (`current-focus`, roadmap e backlog da fase)
 
+## Status da fase (hoje)
+- phase-05 concluida para o escopo de metricas e dashboards
+- validacao de app de teste em `dev` concluida (healthcheck, endpoint de erro e logs no cluster)
+
+## Pendencias ativas (proxima etapa)
+- implantar backend de logs (Loki) no escopo compartilhado
+- implantar coletor de logs com Grafana Alloy
+- integrar Alloy -> Loki -> Grafana para consulta de logs por namespace/app
+- definir retencao de logs conservadora para homelab single-node
+- documentar runbook de troubleshooting para pipeline de logs
+
 ## Riscos e cuidados operacionais
 - controlar consumo de recursos da stack (requests/limits conservadores)
 - evitar retencao longa de metricas no single-node
@@ -49,4 +64,4 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 - evitar credenciais padrao em dashboards
 
 ## Proximo marco apos a phase-05
-Entrar na fase de validacao com app de teste real para confirmar telemetria por workload e, na sequencia, evoluir para logging centralizado e alertas.
+Entrar na fase de logs centralizados com Loki + Grafana Alloy, mantendo rollout incremental e baixo consumo de recursos.

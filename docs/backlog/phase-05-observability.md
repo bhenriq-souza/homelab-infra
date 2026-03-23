@@ -183,6 +183,30 @@ Observacao:
 - visualizacao de restarts/falhas basicas de pods
 - documentacao da fase criada e atualizada
 
+## Status de execucao (2026-03-23)
+
+### Concluido
+- aplicacao `shared-observability` sincronizada no Argo CD
+- stack minima de metricas operacional (Prometheus + Grafana + exporters)
+- dashboards de node/namespace/pod validados no Grafana
+- metricas de restart/falha basica confirmadas
+- app de teste em `dev` validado com endpoints de sucesso e erro
+- logs de aplicacao confirmados no cluster (stdout/stderr)
+
+### Em aberto
+- visualizacao de logs de aplicacao no Grafana
+
+### Decisao de rollout
+- manter workload de teste apenas em `dev`
+- adiar promocao para `prd` ate consolidar pipeline de logs
+
+### Pendencias para trilha de logs
+- implantar Loki (backend de logs) no escopo compartilhado
+- implantar Grafana Alloy como agente coletor
+- configurar labels e pipeline de envio Alloy -> Loki
+- validar consultas no Grafana Explore por `namespace` e `app`
+- definir retencao de logs adequada ao limite de disco do homelab
+
 ## Riscos e cuidados
 - risco de consumo excessivo de CPU/memoria no single-node
 - risco de uso de armazenamento acima do esperado por retencao alta
