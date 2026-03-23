@@ -8,6 +8,13 @@ Este diretorio contem o estado desejado do cluster reconciliado pelo Argo CD.
 - `apps/dev`: componentes especificos do ambiente logico `dev`.
 - `apps/prd`: componentes especificos do ambiente logico `prd`.
 
+## Convencao para workloads
+- organizar manifests por aplicacao dentro de `manifests/`, por exemplo:
+	- `gitops/apps/dev/workloads/manifests/myapp/`
+	- `gitops/apps/prd/workloads/manifests/myapp/`
+- cada pasta de app deve conter seu proprio `kustomization.yaml` para compor deployment, service, ingress e recursos adicionais.
+- o `kustomization.yaml` do ambiente deve referenciar a pasta do app (nao arquivos individuais), facilitando crescimento e ownership.
+
 ## Modelo de ambientes nesta fase
 - Existe apenas um cluster K3s.
 - `dev` e `prd` sao ambientes logicos segregados por namespaces.
