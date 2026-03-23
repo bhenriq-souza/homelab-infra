@@ -126,3 +126,120 @@ sudo kubectl get nodes
 - se `k3s` não subir: `sudo journalctl -u k3s -n 200 --no-pager`
 - se `kubectl` remoto falhar: revisar endpoint no kubeconfig e permissões do arquivo
 - se houver erro de certificado remoto: renovar a cópia externa do kubeconfig a partir do host
+
+## Runbook - Bootstrap Terraform (shared, dev, prd)
+
+### Objetivo
+Executar o bootstrap Terraform do laboratorio a partir do laptop administrador, aplicando os ambientes `shared`, `dev` e `prd` no cluster K3s remoto.
+
+### Escopo
+- execucao remota via laptop administrador
+- instalacao/bootstrap inicial do Argo CD no ambiente `shared`
+- criacao da base logica dos ambientes `dev` e `prd`
+
+### Pre-check (laptop administrador)
+1. Validar ferramentas necessarias.
+
+```bash
+terraform -version
+kubectl version --client
+helm version
+```
+
+2. Definir kubeconfig e contexto alvo para a sessao atual.
+
+```bash
+export KUBECONFIG=/home/<usuario>/.kube/config-homelab.yaml
+export KUBE_CONTEXT=default
+```
+
+3. Validar contexto e conectividade com a API do cluster.
+
+```bash
+kubectl config current-context --kubeconfig "$KUBECONFIG"
+kubectl cluster-info --kubeconfig "$KUBECONFIG"
+kubectl get nodes --kubeconfig "$KUBECONFIG"
+```
+
+Critério para seguir:
+- contexto correto selecionado
+- API Kubernetes acessivel
+- ao menos um no em estado `Ready`
+
+### Execucao (laptop administrador)
+4. Rodar bootstrap completo pela ordem padrao (`shared`, `dev`, `prd`).
+
+```bash
+./terraform/scripts/bootstrap-order.sh
+```
+
+Comportamento esperado:
+- `init`, `plan` e `apply` para cada ambiente
+- em `shared`, criacao/bootstrap do Argo CD
+- em `dev` e `prd`, aplicacao dos namespaces e recursos base
+
+### Validacao pos-apply
+5. Validar estado Terraform por ambiente.
+
+```bash
+terraform -chdir=terraform/environments/shared output
+terraform -chdir=terraform/environments/dev output
+terraform -chdir=terraform/environments/prd output
+```
+
+6. Validar recursos no cluster.
+
+```bash
+kubectl get ns
+kubectl -n argocd get pods
+kubectl -n argocd get applications.argoproj.io
+```
+
+Critério de sucesso:
+- apply concluido sem erro nos tres ambientes
+- namespace `argocd` existente e pods do Argo CD saudaveis
+- aplicacao raiz do bootstrap presente no Argo CD
+
+### Troubleshooting rapido
+
+#### Erro de provider kubectl
+Sintoma:
+
+```text
+registry.terraform.io does not have a provider named registry.terraform.io/hashicorp/kubectl
+```
+
+Validacao:
+
+```bash
+terraform -chdir=terraform/environments/shared providers
+```
+
+Acao:
+- confirmar source `gavinbunney/kubectl` no modulo `terraform/modules/argocd-bootstrap/versions.tf`
+- reexecutar `terraform -chdir=terraform/environments/shared init -upgrade`
+
+#### Erro de contexto Kubernetes inexistente
+Sintoma:
+
+```text
+Provider configuration: cannot load Kubernetes client config
+context "default" does not exist
+```
+
+Validacao:
+
+```bash
+kubectl config get-contexts --kubeconfig "$KUBECONFIG"
+kubectl config current-context --kubeconfig "$KUBECONFIG"
+```
+
+Acao:
+- garantir `KUBECONFIG` apontando para o arquivo correto
+- ajustar `KUBE_CONTEXT` para um contexto existente no arquivo carregado
+
+### Evidencias minimas a registrar
+- saida do `terraform` com sucesso para `shared`, `dev` e `prd`
+- saida de `kubectl get nodes`
+- saida de `kubectl -n argocd get pods`
+- saida de `kubectl -n argocd get applications.argoproj.io`
