@@ -28,6 +28,10 @@ spec:
           env:
             - name: APP_ENV
               value: dev
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: GUNICORN_CMD_ARGS
+              value: --access-logfile - --error-logfile - --log-level info --capture-output
           livenessProbe:
             httpGet:
               path: /status/200
