@@ -1,180 +1,52 @@
 # Current Focus
 
 ## Fase ativa
-Phase 04 — IaC + GitOps foundation
+Phase 05 - Observabilidade base da plataforma
 
-## Objetivo
-Estabelecer a fundação inicial da plataforma do homelab usando Terraform para infraestrutura/bootstrap e Argo CD para GitOps, já preparada para múltiplos ambientes lógicos no mesmo cluster.
+## Objetivo da fase
+Implantar uma camada inicial de observabilidade orientada a operacao para o cluster K3s single-node, com foco em metricas e dashboards basicos via GitOps, mantendo baixo custo operacional para homelab.
 
-## Estado atual
-- Ubuntu Server 24.04 instalado no host
-- K3s instalado com sucesso e cluster funcional
-- Estrutura documental do repositório já criada
-- ADRs principais já definidos para Terraform e Argo CD
-- Diretório `/terraform` já existente com convenções iniciais
-- Decisão confirmada: recursos GitOps ficarão fora de `/terraform`
-- Decisão confirmada: por enquanto haverá um único cluster, com segregação de ambientes por namespaces
+## Estado atual consolidado
+- host on-prem em Ubuntu Server 24.04 operacional
+- cluster K3s single-node funcional
+- segregacao logica por namespaces (`shared`, `dev`, `prd`)
+- base Terraform criada com entrypoints `shared`, `dev` e `prd`
+- Argo CD bootstrapado com Terraform
+- sincronizacao Argo CD <-> repositorio validada
+- workloads de exemplo em `dev`/`prd` podem falhar por imagem ausente no registry, sem bloquear observabilidade
 
-## Estratégia de ambientes
-Nesta etapa, o homelab continuará operando com um único cluster K3s.
+## Escopo desta fase (phase-05)
+- adicionar stack inicial de metricas e dashboards no escopo compartilhado do cluster
+- observar saude do cluster e do node (CPU, memoria, disco)
+- observar estado de pods e namespaces, incluindo restarts e falhas basicas
+- estruturar a entrega via Argo CD, sem desviar do padrao GitOps atual
+- documentar arquitetura, trade-offs, plano de execucao e criterios de aceite
 
-A separação entre ambientes será lógica, por namespaces, permitindo suportar desde já:
-- `dev`
-- `prd`
+## Fora do escopo desta fase
+- logging centralizado completo
+- tracing distribuido
+- alertas avancados e operacao SRE madura
+- multi-cluster, fleet e integracao com GCP Monitoring
+- hardening avancado de exposicao externa de dashboards
 
-A estrutura de código deve nascer preparada para múltiplos ambientes, mesmo sem múltiplos clusters neste momento.
+## Entregaveis imediatos
+- documentacao da phase-05 com arquitetura recomendada e plano detalhado
+- atualizacao do roadmap com sequencia de fases coerente ao estado real
+- aplicacao GitOps da observabilidade no escopo `shared`
+- configuracao inicial enxuta para homelab single-node
 
-Isso significa que:
-- Terraform deve refletir ambientes distintos
-- GitOps deve refletir ambientes distintos
-- namespaces devem seguir convenções por ambiente
-- componentes compartilhados do cluster devem ser claramente diferenciados de componentes específicos de ambiente
+## Criterios de conclusao da fase
+- aplicacao de observabilidade criada e sincronizando no Argo CD
+- Prometheus coletando metricas de node e workloads do cluster
+- Grafana acessivel para operacao inicial
+- dashboards iniciais com visibilidade de node, pods e namespaces
+- documentacao principal atualizada (`current-focus`, roadmap e backlog da fase)
 
-## Escopo desta fase
-- definir a estrutura inicial de `/terraform`
-- definir a estrutura inicial de `/gitops`
-- criar o bootstrap do Argo CD no cluster K3s existente usando Terraform
-- estabelecer uma base simples, reprodutível e fácil de evoluir
-- suportar desde já os ambientes `dev` e `prd` no mesmo cluster
-- documentar as decisões e preparar o caminho para a fase de observabilidade
+## Riscos e cuidados operacionais
+- controlar consumo de recursos da stack (requests/limits conservadores)
+- evitar retencao longa de metricas no single-node
+- reduzir superficie de exposicao (preferir acesso interno/port-forward no inicio)
+- evitar credenciais padrao em dashboards
 
-## Incluído no escopo
-- entrypoints Terraform para os ambientes `dev` e `prd`
-- providers necessários para operar o cluster existente
-- instalação inicial do Argo CD via Terraform
-- estrutura inicial do diretório `/gitops`
-- definição do bootstrap inicial do GitOps
-- convenções iniciais de namespaces por ambiente
-- diferenciação entre recursos cluster-wide e recursos específicos por ambiente
-- documentação mínima necessária para suportar a fase
-
-## Fora do escopo
-- instalação da stack de observabilidade
-- pipelines de CI/CD
-- onboarding de aplicações
-- integração híbrida com cloud
-- gerenciamento avançado de segredos
-- hardening avançado de segurança
-- automação completa de provisionamento do host
-
-## Decisões vigentes
-- usar Terraform para infraestrutura/bootstrap
-- usar Argo CD para GitOps
-- manter manifests GitOps fora de `/terraform`
-- manter `environments/` simples e concentrar lógica em `modules/`
-- evitar overengineering na primeira versão
-- priorizar simplicidade, clareza e reprodutibilidade
-- suportar múltiplos ambientes no código desde já
-- usar segregação por namespaces em um único cluster neste momento
-
-## Diretrizes de modelagem
-A solução deve deixar explícita a diferença entre:
-- componentes compartilhados do cluster
-- componentes específicos do ambiente `dev`
-- componentes específicos do ambiente `prd`
-
-Exemplos esperados:
-- Argo CD como componente compartilhado do cluster
-- namespaces específicos por ambiente para workloads e recursos que fizerem sentido
-- estrutura de diretórios preparada para crescimento sem depender de múltiplos clusters agora
-
-## Resultado esperado
-Ao final desta fase, o repositório deve possuir:
-- estrutura coerente de Terraform para os ambientes `dev` e `prd`
-- bootstrap inicial do Argo CD no cluster
-- estrutura inicial de GitOps separada de Terraform
-- convenções iniciais de namespace por ambiente
-- base pronta para que a observabilidade seja entregue via GitOps na próxima fase
-
-## Entregáveis
-- estrutura inicial de `/terraform/environments/dev`
-- estrutura inicial de `/terraform/environments/prd`
-- arquivos Terraform necessários para bootstrap do Argo CD
-- estrutura inicial de `/gitops`
-- definição do padrão inicial de bootstrap GitOps
-- convenções documentadas para segregação por namespaces
-- documentação atualizada quando necessário
-
-## Critérios de pronto
-- a estrutura de diretórios está clara e coerente com as ADRs
-- o Terraform consegue apontar para o cluster K3s existente
-- os ambientes `dev` e `prd` estão representados no código
-- a segregação lógica por namespaces está definida
-- o Argo CD pode ser instalado no cluster via Terraform
-- o diretório `/gitops` existe com propósito e organização definidos
-- a próxima fase de observabilidade pode começar sem retrabalho estrutural
-
-## Riscos e cuidados
-- evitar misturar responsabilidades entre Terraform e GitOps
-- evitar criar módulos Terraform desnecessários cedo demais
-- evitar tratar ambientes lógicos como se fossem isolamento forte de clusters distintos
-- evitar instalar componentes fora do fluxo definido
-- não versionar segredos reais
-- manter o bootstrap inicial o mais simples possível
-
-## Checklist operacional da fase
-- [x] definir árvore inicial de `/terraform`
-- [x] definir árvore inicial de `/gitops`
-- [x] criar entrypoint Terraform para `dev`
-- [x] criar entrypoint Terraform para `prd`
-- [x] configurar providers necessários
-- [x] implementar código Terraform para bootstrap do Argo CD
-- [x] definir bootstrap inicial do GitOps (app-of-apps)
-- [x] definir convenções de namespaces por ambiente
-- [x] revisar documentação impactada (Terraform e GitOps)
-- [ ] aplicar Terraform no cluster (`shared`, `dev`, `prd`)
-- [ ] validar Argo CD e sincronização das aplicações raiz
-- [ ] ajustar `repoURL` final nos manifests GitOps (`shared-platform`, `dev-workloads`, `prd-workloads`)
-- [ ] registrar evidências operacionais de validação da fase
-- [ ] registrar decisões complementares, se necessário
-
-## Status de execução (hoje)
-### Concluído
-- estrutura de diretórios inicial criada para `/terraform` e `/gitops`
-- entrypoints Terraform criados para `shared`, `dev` e `prd`
-- módulos Terraform criados para bootstrap do Argo CD e namespaces por ambiente
-- providers Kubernetes/Helm/Kubectl configurados para uso com kubeconfig local
-- bootstrap GitOps inicial criado no padrão app-of-apps
-- aplicações iniciais separadas por escopo:
-	- compartilhado: `shared-platform`
-	- ambiente: `dev-workloads` e `prd-workloads`
-- convenções de namespace estabelecidas:
-	- compartilhado: `argocd`, `platform-shared`
-	- ambiente: `dev-apps`, `prd-apps`
-- documentação de estrutura e responsabilidades atualizada em `terraform/README.md` e `gitops/README.md`
-
-### Pendente para encerrar a fase
-- executar o bootstrap no cluster local e validar sucesso end-to-end
-- confirmar saúde do Argo CD (`argocd` namespace, pods, aplicação raiz e apps filhas)
-- substituir URLs placeholder (`https://github.com/your-org/homelab-infra.git`) nos manifests de bootstrap do GitOps
-- salvar evidências de validação (comandos e resultados) para fechamento da fase
-
-### Atualização recente
-- `terraform/environments/shared/terraform.tfvars` já está apontando para o repositório real e com versão de chart/contexto definidos.
-- permanece pendente ajustar os `repoURL` dos arquivos em `gitops/bootstrap/root/applications/`.
-
-## Próximo passo após esta fase
-Phase 05 — Observabilidade via GitOps
-
-## Objetivo do próximo passo
-- instalar a stack inicial de observabilidade usando Argo CD
-- começar com componentes mínimos e operacionais
-- decidir o que será compartilhado no cluster e o que será segmentado por ambiente
-- preparar dashboards, métricas e logs para suportar a evolução do homelab
-
-## Diretriz de compartilhamento vs segregação
-A modelagem desta fase deve seguir a seguinte lógica:
-
-### Compartilhado no cluster
-- `argocd`
-- componentes base de plataforma que sejam naturalmente cluster-wide
-- componentes que não precisem ser duplicados por ambiente
-
-### Específico por ambiente
-- namespaces como `dev-*` e `prd-*`
-- aplicações e workloads
-- configurações e values por ambiente
-- políticas, quotas e ajustes específicos por ambiente, quando fizer sentido
-
-Princípio:
-evitar duplicação desnecessária de componentes compartilhados do cluster entre `dev` e `prd`.
+## Proximo marco apos a phase-05
+Entrar na fase de validacao com app de teste real para confirmar telemetria por workload e, na sequencia, evoluir para logging centralizado e alertas.

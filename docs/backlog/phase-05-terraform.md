@@ -1,16 +1,10 @@
-# Phase 05 - Terraform
+# Phase 05 - Terraform (superseded)
 
-## Objetivo
-Estruturar a infraestrutura declarativa do laboratório.
+Este documento ficou desatualizado apos a consolidacao da fundacao IaC + GitOps na fase 04.
 
-## Macrotarefas
-- criar estrutura base do Terraform
-- criar módulos iniciais
-- criar environments
-- definir state strategy
-- criar scripts de validação
+Status:
+- a estruturacao Terraform ja foi tratada na fase anterior
+- o foco atual da fase 05 e observabilidade base
 
-## Critérios de aceite
-- estrutura base criada
-- módulos iniciais padronizados
-- validação local possível
+Referencia atual:
+- `docs/backlog/phase-05-observability.md`

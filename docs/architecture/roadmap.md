@@ -20,14 +20,15 @@
 - validar kubeconfig
 - preparar namespaces base
 
-## Fase 4 - Observabilidade
-- instalar stack mínima
-- definir dashboards e alertas básicos
+## Fase 4 - Fundacao IaC + GitOps
+- estruturar Terraform por escopo `shared` / `dev` / `prd`
+- bootstrapar Argo CD no cluster local
+- validar fluxo app-of-apps e sincronizacao com Git
 
-## Fase 5 - Infra declarativa
-- estruturar Terraform
-- provisionar base GCP
-- criar registry e VM inicial
+## Fase 5 - Observabilidade base
+- instalar stack minima de metricas e dashboards
+- cobrir saude do node, cluster, pods e namespaces
+- manter configuracao enxuta para K3s single-node
 
 ## Fase 6 - Entrega e automação
 - preparar CI de infraestrutura
