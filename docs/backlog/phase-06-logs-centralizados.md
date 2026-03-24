@@ -73,8 +73,24 @@ Centralizar logs do cluster no Grafana de forma incremental, priorizando confiab
 3. datasource Loki no Grafana
 4. validacao no Explore
 
-Observacao:
-esta fase e apenas documental; manifests serao materializados na etapa seguinte.
+Decisao para o ambiente atual (dev):
+- materializacao completa em um unico ciclo GitOps
+- sem rollout incremental por lotes
+- ainda mantendo ordem tecnica de dependencia durante o sync
+
+## Materializacao GitOps desta fase
+
+### Artefatos aplicados
+- `gitops/apps/shared/platform/manifests/shared-logging-loki.yaml`
+- `gitops/apps/shared/platform/manifests/shared-logging-alloy.yaml`
+- `gitops/apps/shared/platform/manifests/observability-kube-prometheus-stack.yaml` (datasource Loki)
+- `gitops/apps/shared/platform/kustomization.yaml` (inclusao dos novos recursos)
+
+### Parametros operacionais definidos
+- Loki em modo `SingleBinary`, sem HA, com retencao inicial de 7 dias
+- persistencia local inicial de 10Gi
+- Alloy em DaemonSet, coletando logs de pods/containers via host paths
+- labels minimas no pipeline: `cluster`, `namespace`, `pod`, `container`, `app`, `environment`
 
 ## Plano de implementacao incremental
 
@@ -111,6 +127,18 @@ esta fase e apenas documental; manifests serao materializados na etapa seguinte.
 - consultas por namespace/app/pod funcionando
 - retencao e consumo dentro dos limites definidos
 - runbook de operacao e troubleshooting atualizado
+
+## Validacao rapida pos-materializacao
+1. Confirmar sincronizacao das aplicacoes no Argo CD (`shared-platform` e filhos de observabilidade/logging).
+2. Validar pods e estado basico:
+	- `kubectl -n observability get pods`
+	- `kubectl -n observability get pvc`
+3. Gerar trafego de teste no `myapp` em `dev`:
+	- `kubectl -n dev-apps logs deploy/myapp --tail=100`
+4. No Grafana Explore, consultar em Loki:
+	- `{namespace="dev-apps", app="myapp"}`
+	- `{namespace="dev-apps", pod=~"myapp-.*"}`
+5. Confirmar latencia de ingestao e aderencia das labels obrigatorias.
 
 ## Riscos e cuidados
 - risco de consumo excessivo de disco
