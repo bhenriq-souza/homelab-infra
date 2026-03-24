@@ -1,13 +1,10 @@
-# Phase 06 - CI/CD
+# Phase 06 - CI/CD (superseded)
 
-## Objetivo
-Preparar automações básicas do repositório de infraestrutura.
+Este documento foi reposicionado apos a inclusao da fase de logs centralizados.
 
-## Macrotarefas
-- validar Terraform em CI
-- validar markdown em CI
-- definir regras mínimas de revisão
+Status:
+- fase 06 atual: logs centralizados (Loki + Grafana Alloy)
+- CI/CD passou para a fase seguinte na sequencia do roadmap
 
-## Critérios de aceite
-- workflows iniciais criados
-- validação básica do repositório funcionando
+Referencia atual:
+- `docs/backlog/phase-06-logs-centralizados.md`

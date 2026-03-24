@@ -30,14 +30,19 @@
 - cobrir saude do node, cluster, pods e namespaces
 - manter configuracao enxuta para K3s single-node
 
-## Fase 6 - Entrega e automação
+## Fase 6 - Logs centralizados
+- implantar Loki para backend de logs
+- implantar Grafana Alloy para coleta de logs
+- habilitar consulta de logs no Grafana
+
+## Fase 7 - Entrega e automação
 - preparar CI de infraestrutura
 - integrar com demais repositórios
 
-## Fase 7 - Integração com o app
+## Fase 8 - Integração com o app
 - preparar contratos de infra para frontend/backend
 - definir dependências operacionais do app
 
-## Fase 8 - Híbrido e fleet
+## Fase 9 - Híbrido e fleet
 - consolidar conectividade on-prem + cloud
 - preparar base para gestão multi-cluster

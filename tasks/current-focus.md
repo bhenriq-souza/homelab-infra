@@ -56,6 +56,7 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 - integrar Alloy -> Loki -> Grafana para consulta de logs por namespace/app
 - definir retencao de logs conservadora para homelab single-node
 - documentar runbook de troubleshooting para pipeline de logs
+- consolidar execucao na fase `docs/backlog/phase-06-logs-centralizados.md`
 
 ## Riscos e cuidados operacionais
 - controlar consumo de recursos da stack (requests/limits conservadores)
