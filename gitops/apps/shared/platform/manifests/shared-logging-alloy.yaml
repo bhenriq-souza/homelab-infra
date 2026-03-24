@@ -57,6 +57,12 @@ data:
       targets = discovery.kubernetes.pods.targets
 
       rule {
+        source_labels = ["__meta_kubernetes_pod_phase"]
+        regex         = "Running"
+        action        = "keep"
+      }
+
+      rule {
         source_labels = ["__meta_kubernetes_namespace"]
         target_label  = "namespace"
       }
@@ -103,9 +109,10 @@ data:
       }
 
       rule {
-        source_labels = ["__meta_kubernetes_pod_uid"]
+        source_labels = ["__meta_kubernetes_pod_name", "__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+        separator     = "_"
         target_label  = "__path__"
-        replacement   = "/var/log/pods/*$1/*/*.log"
+        replacement   = "/var/log/containers/$1-*.log"
       }
     }
 
