@@ -23,6 +23,12 @@ variable "argocd_chart_version" {
   nullable    = true
 }
 
+variable "argocd_helm_values_override" {
+  description = "Valores extras/override para o chart argo-cd no ambiente shared."
+  type        = any
+  default     = {}
+}
+
 variable "gitops_repo_url" {
   description = "URL do repositorio Git que contem o diretorio gitops/."
   type        = string

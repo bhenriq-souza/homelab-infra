@@ -55,3 +55,21 @@ KUBE_CONTEXT=default \
 ## Responsabilidades
 - Terraform: bootstrap/foundation e instalacao inicial do Argo CD
 - `gitops/`: estado desejado reconciliado continuamente pelo Argo CD
+
+## Notas operacionais recentes
+
+### Padrao de kubeconfig por ambiente
+Para evitar erro de provider (`context "default" does not exist`), os ambientes Terraform foram padronizados para usar:
+
+- `kubeconfig_path = "~/.kube/config-homelab.yaml"` nos `terraform.tfvars`
+- `pathexpand(var.kubeconfig_path)` nos providers para resolucao correta de `~`
+
+Isso evita discrepancia entre o kubeconfig ativo no shell e o kubeconfig lido pelo Terraform.
+
+### Baseline de tuning do Argo CD
+O modulo `modules/argocd-bootstrap` passou a aplicar baseline de estabilidade/performance para homelab:
+
+- requests/limits para componentes principais
+- `timeout.reconciliation` com jitter
+- `notifications` e `dex` desabilitados por padrao
+- variavel `argocd_helm_values_override` para customizacao por ambiente

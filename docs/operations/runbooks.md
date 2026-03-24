@@ -244,6 +244,35 @@ Acao:
 - saida de `kubectl -n argocd get pods`
 - saida de `kubectl -n argocd get applications.argoproj.io`
 
+## Registro operacional - Estabilizacao do Argo CD (2026-03-24)
+
+### Contexto
+- Sintoma observado: lentidao no sync e reinicios intermitentes em componentes do Argo CD.
+- Sintoma adicional: falha de `terraform plan` com erro de contexto Kubernetes inexistente.
+
+### O que foi feito
+1. Aplicado tuning baseline do Argo CD no bootstrap Terraform (`shared`):
+	- requests/limits para `controller`, `repoServer`, `server`, `applicationSet` e `redis`
+	- reconciliacao configurada com `timeout.reconciliation=300s` e `timeout.reconciliation.jitter=60s`
+	- desabilitado `notifications` e `dex` por padrao
+	- habilitado override por ambiente via `argocd_helm_values_override`
+2. Corrigido uso de kubeconfig nos providers Terraform:
+	- troca para `pathexpand(var.kubeconfig_path)` em `shared`, `dev` e `prd`
+	- padronizado `kubeconfig_path = "~/.kube/config-homelab.yaml"` nos `terraform.tfvars`
+
+### Resultado esperado apos apply
+- `terraform plan` e `terraform apply` sem erro de contexto de provider Kubernetes
+- Argo CD mais estavel em reconciliacoes, com menor chance de `CrashLoopBackOff` por pressao de recursos
+
+### Validacao recomendada
+```bash
+terraform -chdir=terraform/environments/shared plan
+terraform -chdir=terraform/environments/shared apply
+kubectl -n argocd get pods
+kubectl -n argocd get events --sort-by=.lastTimestamp | tail -n 30
+kubectl -n argocd logs deploy/argocd-application-controller --tail=200
+```
+
 ## Runbook - Validacao de app de teste e logs
 
 ### Objetivo

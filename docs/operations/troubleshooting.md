@@ -76,3 +76,71 @@ KUBE_CONTEXT=default \
 
 Observacao operacional:
 - o bootstrap Terraform pode ser executado do laptop administrador, sem SSH no host, desde que haja conectividade com a API do cluster e kubeconfig valido.
+
+## Argo CD lento ou com crash durante sync
+
+### Sintoma
+- sincronizacao lenta ao reconciliar mudancas no repositorio GitOps
+- pod(s) do Argo CD reiniciando com frequencia durante picos de sync
+- UI com varias reconexoes de stream (`Watch`/`WatchResourceTree`)
+
+### Possiveis causas
+- pressao de memoria/CPU em `argocd-application-controller` e `argocd-repo-server`
+- reconciliacao muito frequente para o tamanho do cluster/repo
+- componentes opcionais habilitados sem uso (ex.: notifications/dex)
+
+### Passos de validacao
+1. Verificar reinicios e motivo de terminacao dos pods:
+
+```bash
+kubectl -n argocd get pods
+kubectl -n argocd describe pod <pod-name> | grep -E "Reason|Last State|OOMKilled|Exit Code"
+```
+
+2. Verificar eventos recentes no namespace `argocd`:
+
+```bash
+kubectl -n argocd get events --sort-by=.lastTimestamp | tail -n 30
+```
+
+3. Inspecionar uso de CPU/memoria durante sync:
+
+```bash
+kubectl -n argocd top pod
+```
+
+4. Confirmar configuracao efetiva do chart:
+
+```bash
+helm -n argocd get values argocd -a
+```
+
+### Acao corretiva
+- aplicar o baseline de tuning no modulo Terraform:
+	- `terraform/modules/argocd-bootstrap/main.tf`
+- baseline inclui:
+	- requests/limits para `controller`, `repoServer`, `server`, `applicationSet` e `redis`
+	- `timeout.reconciliation=300s` e `timeout.reconciliation.jitter=60s`
+	- `notifications.enabled=false` e `dex.enabled=false` (quando nao utilizados)
+- caso necessario, ajustar override por ambiente em:
+	- `terraform/environments/shared/variables.tf` (`argocd_helm_values_override`)
+
+### Validacao pos-correcao
+1. Reaplicar `shared`:
+
+```bash
+terraform -chdir=terraform/environments/shared plan
+terraform -chdir=terraform/environments/shared apply
+```
+
+2. Forcar uma sincronizacao de app com mudanca pequena e observar estabilidade:
+
+```bash
+kubectl -n argocd get pods -w
+kubectl -n argocd logs deploy/argocd-application-controller --tail=200 -f
+```
+
+3. Criterio de sucesso:
+- sem novos `CrashLoopBackOff` no namespace `argocd`
+- tempo de sync reduzido/estavel para apps do bootstrap
+- ausencia de novos eventos de `OOMKilled`
