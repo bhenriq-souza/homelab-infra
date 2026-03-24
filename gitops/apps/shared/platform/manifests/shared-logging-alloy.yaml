@@ -117,12 +117,6 @@ data:
     loki.process "pods" {
       stage.cri {}
 
-      stage.static_labels {
-        values = {
-          cluster = "homelab-k3s"
-        }
-      }
-
       forward_to = [loki.write.default.receiver]
     }
 
