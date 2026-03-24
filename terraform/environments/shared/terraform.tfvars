@@ -7,5 +7,8 @@ argocd_chart_version = "7.7.0"
 # Opcional: alterar branch do bootstrap.
 gitops_target_revision = "main"
 
+# Opcional: apontar para o kubeconfig correto do homelab.
+kubeconfig_path = "~/.kube/config-homelab.yaml"
+
 # Opcional: forcar contexto especifico do kubeconfig.
 kubeconfig_context = "default"

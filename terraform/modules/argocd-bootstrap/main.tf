@@ -8,6 +8,90 @@ resource "kubernetes_namespace_v1" "argocd" {
   }
 }
 
+locals {
+  # Baseline tuned for small homelab clusters to reduce Argo CD crashes under sync load.
+  default_argocd_helm_values = {
+    global = {
+      domain = ""
+    }
+    configs = {
+      cm = {
+        "timeout.reconciliation"        = "300s"
+        "timeout.reconciliation.jitter" = "60s"
+      }
+    }
+    controller = {
+      resources = {
+        requests = {
+          cpu    = "250m"
+          memory = "512Mi"
+        }
+        limits = {
+          cpu    = "1000m"
+          memory = "1Gi"
+        }
+      }
+    }
+    repoServer = {
+      resources = {
+        requests = {
+          cpu    = "250m"
+          memory = "256Mi"
+        }
+        limits = {
+          cpu    = "1000m"
+          memory = "1Gi"
+        }
+      }
+    }
+    server = {
+      service = {
+        type = "ClusterIP"
+      }
+      resources = {
+        requests = {
+          cpu    = "100m"
+          memory = "256Mi"
+        }
+        limits = {
+          cpu    = "500m"
+          memory = "512Mi"
+        }
+      }
+    }
+    applicationSet = {
+      resources = {
+        requests = {
+          cpu    = "50m"
+          memory = "128Mi"
+        }
+        limits = {
+          cpu    = "200m"
+          memory = "256Mi"
+        }
+      }
+    }
+    redis = {
+      resources = {
+        requests = {
+          cpu    = "100m"
+          memory = "128Mi"
+        }
+        limits = {
+          cpu    = "300m"
+          memory = "256Mi"
+        }
+      }
+    }
+    notifications = {
+      enabled = false
+    }
+    dex = {
+      enabled = false
+    }
+  }
+}
+
 resource "helm_release" "argocd" {
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
@@ -22,16 +106,8 @@ resource "helm_release" "argocd" {
   timeout          = 600
 
   values = [
-    yamlencode({
-      global = {
-        domain = ""
-      }
-      server = {
-        service = {
-          type = "ClusterIP"
-        }
-      }
-    })
+    yamlencode(local.default_argocd_helm_values),
+    yamlencode(var.argocd_helm_values_override)
   ]
 }
 

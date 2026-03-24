@@ -33,3 +33,9 @@ variable "gitops_root_path" {
   type        = string
   default     = "gitops/bootstrap/root"
 }
+
+variable "argocd_helm_values_override" {
+  description = "Valores extras/override para o chart argo-cd (mesclados apos o baseline do modulo)."
+  type        = any
+  default     = {}
+}
