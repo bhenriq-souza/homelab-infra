@@ -39,3 +39,39 @@ variable "argocd_helm_values_override" {
   type        = any
   default     = {}
 }
+
+variable "argocd_ingress_enabled" {
+  description = "Habilita Ingress para o argocd-server."
+  type        = bool
+  default     = false
+}
+
+variable "argocd_ingress_hostname" {
+  description = "Hostname do Ingress do argocd-server."
+  type        = string
+  default     = ""
+}
+
+variable "argocd_ingress_class_name" {
+  description = "IngressClass usada para expor o argocd-server."
+  type        = string
+  default     = "traefik"
+}
+
+variable "argocd_ingress_tls_enabled" {
+  description = "Habilita TLS no Ingress do argocd-server."
+  type        = bool
+  default     = true
+}
+
+variable "argocd_ingress_tls_secret_name" {
+  description = "Nome do secret TLS usado pelo Ingress do argocd-server."
+  type        = string
+  default     = "argocd-server-tls"
+}
+
+variable "argocd_ingress_cert_manager_cluster_issuer" {
+  description = "ClusterIssuer do cert-manager para emitir o certificado TLS do Ingress do Argo CD."
+  type        = string
+  default     = ""
+}

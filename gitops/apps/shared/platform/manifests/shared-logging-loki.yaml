@@ -68,6 +68,21 @@ spec:
 
         test:
           enabled: false
+
+        gateway:
+          enabled: true
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            hosts:
+              - host: loki.homelab.local
+                paths:
+                  - path: /
+                    pathType: Prefix
+            tls:
+              - secretName: loki-tls
+                hosts:
+                  - loki.homelab.local
   destination:
     server: https://kubernetes.default.svc
     namespace: observability

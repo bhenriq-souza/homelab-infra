@@ -384,3 +384,47 @@ curl -i http://127.0.0.1:18080/status/500
 
 ### Evolucao posterior
 - promover o mesmo app de teste para `prd` apenas quando a fase de validacao em `dev` estiver concluida
+
+## Runbook - Acesso diario ao Argo CD via Ingress/TLS
+
+### Objetivo
+Substituir o uso recorrente de `port-forward` por acesso estavel via hostname interno com TLS.
+
+### Premissas
+- Traefik ativo no cluster
+- DNS interno resolvendo o hostname do Argo CD para o endpoint de entrada do cluster
+- cert-manager opcional (quando usado, informar `ClusterIssuer` no `terraform.tfvars` do `shared`)
+
+### Configuracao Terraform (shared)
+1. Confirmar no arquivo `terraform/environments/shared/terraform.tfvars`:
+	- `argocd_ingress_enabled = true`
+	- `argocd_ingress_hostname = "argocd.homelab.local"`
+	- `argocd_ingress_class_name = "traefik"`
+	- `argocd_ingress_tls_enabled = true`
+	- `argocd_ingress_tls_secret_name = "argocd-server-tls"`
+2. (Opcional) Configurar emissao automatica de certificado:
+	- `argocd_ingress_cert_manager_cluster_issuer = "<cluster-issuer>"`
+
+### Aplicacao
+```bash
+terraform -chdir=terraform/environments/shared plan
+terraform -chdir=terraform/environments/shared apply
+```
+
+### Validacao
+```bash
+kubectl -n argocd get ingress
+kubectl -n argocd describe ingress argocd-server
+kubectl -n argocd get svc argocd-server
+```
+
+Validacao no laptop admin:
+```bash
+nslookup argocd.homelab.local
+curl -vk https://argocd.homelab.local
+```
+
+### Criterios de sucesso
+- UI acessivel por `https://argocd.homelab.local`
+- login e navegacao sem reconexoes frequentes de sessao
+- operacao diaria sem dependencia de `kubectl port-forward`

@@ -21,6 +21,17 @@ spec:
         grafana:
           service:
             type: ClusterIP
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            hosts:
+              - grafana.homelab.local
+            path: /
+            pathType: Prefix
+            tls:
+              - secretName: grafana-tls
+                hosts:
+                  - grafana.homelab.local
           additionalDataSources:
             - name: Loki
               type: loki

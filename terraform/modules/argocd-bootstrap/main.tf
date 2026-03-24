@@ -9,6 +9,10 @@ resource "kubernetes_namespace_v1" "argocd" {
 }
 
 locals {
+  argocd_server_ingress_annotations = var.argocd_ingress_cert_manager_cluster_issuer != "" ? {
+    "cert-manager.io/cluster-issuer" = var.argocd_ingress_cert_manager_cluster_issuer
+  } : {}
+
   # Baseline tuned for small homelab clusters to reduce Argo CD crashes under sync load.
   default_argocd_helm_values = {
     global = {
@@ -18,6 +22,9 @@ locals {
       cm = {
         "timeout.reconciliation"        = "300s"
         "timeout.reconciliation.jitter" = "60s"
+      }
+      params = {
+        "server.insecure" = var.argocd_ingress_enabled ? "true" : "false"
       }
     }
     controller = {
@@ -47,6 +54,19 @@ locals {
     server = {
       service = {
         type = "ClusterIP"
+      }
+      ingress = {
+        enabled          = var.argocd_ingress_enabled
+        ingressClassName = var.argocd_ingress_class_name
+        hostname         = var.argocd_ingress_hostname
+        tls              = var.argocd_ingress_tls_enabled
+        annotations      = local.argocd_server_ingress_annotations
+        extraTls = var.argocd_ingress_tls_enabled && var.argocd_ingress_hostname != "" ? [
+          {
+            hosts = [var.argocd_ingress_hostname]
+            secretName = var.argocd_ingress_tls_secret_name
+          }
+        ] : []
       }
       resources = {
         requests = {

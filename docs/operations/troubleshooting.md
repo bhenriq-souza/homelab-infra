@@ -124,6 +124,7 @@ helm -n argocd get values argocd -a
 	- `notifications.enabled=false` e `dex.enabled=false` (quando nao utilizados)
 - caso necessario, ajustar override por ambiente em:
 	- `terraform/environments/shared/variables.tf` (`argocd_helm_values_override`)
+- para uso diario da UI, preferir exposicao por Ingress/TLS em vez de `kubectl port-forward` recorrente, reduzindo instabilidade de streams gRPC em redes com jitter.
 
 ### Validacao pos-correcao
 1. Reaplicar `shared`:

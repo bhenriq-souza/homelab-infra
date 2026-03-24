@@ -29,6 +29,42 @@ variable "argocd_helm_values_override" {
   default     = {}
 }
 
+variable "argocd_ingress_enabled" {
+  description = "Habilita Ingress para acesso ao Argo CD no ambiente shared."
+  type        = bool
+  default     = false
+}
+
+variable "argocd_ingress_hostname" {
+  description = "Hostname do Ingress do Argo CD no ambiente shared."
+  type        = string
+  default     = ""
+}
+
+variable "argocd_ingress_class_name" {
+  description = "IngressClass para o Ingress do Argo CD."
+  type        = string
+  default     = "traefik"
+}
+
+variable "argocd_ingress_tls_enabled" {
+  description = "Habilita TLS no Ingress do Argo CD."
+  type        = bool
+  default     = true
+}
+
+variable "argocd_ingress_tls_secret_name" {
+  description = "Nome do secret TLS do Ingress do Argo CD."
+  type        = string
+  default     = "argocd-server-tls"
+}
+
+variable "argocd_ingress_cert_manager_cluster_issuer" {
+  description = "ClusterIssuer do cert-manager para o certificado TLS do Argo CD."
+  type        = string
+  default     = ""
+}
+
 variable "gitops_repo_url" {
   description = "URL do repositorio Git que contem o diretorio gitops/."
   type        = string
