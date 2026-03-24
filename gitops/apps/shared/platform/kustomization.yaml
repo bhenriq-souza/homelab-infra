@@ -3,3 +3,5 @@ kind: Kustomization
 resources:
   - manifests/bootstrap-configmap.yaml
   - manifests/observability-kube-prometheus-stack.yaml
+  - manifests/shared-logging-loki.yaml
+  - manifests/shared-logging-alloy.yaml

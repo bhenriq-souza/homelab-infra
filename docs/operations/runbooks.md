@@ -299,5 +299,59 @@ Resultado esperado:
 - app responde `500` no endpoint de erro controlado
 - logs mostram as requisicoes realizadas no ambiente `dev`
 
+## Runbook - Validacao do pipeline Loki + Alloy
+
+### Objetivo
+Validar ponta a ponta a trilha de logs centralizados no cluster (`Alloy -> Loki -> Grafana`).
+
+### Pre-check
+1. Confirmar recursos em `observability` saudaveis.
+
+```bash
+kubectl -n observability get pods
+kubectl -n observability get svc
+kubectl -n observability get pvc
+```
+
+2. Confirmar estado do coletor Alloy.
+
+```bash
+kubectl -n observability get ds alloy-logs
+kubectl -n observability logs ds/alloy-logs --tail=100
+```
+
+Critério para seguir:
+- pod do Loki em estado `Running`
+- DaemonSet do Alloy com `NUMBER_READY` igual a `DESIRED`
+- sem erro recorrente de push para Loki nos logs do Alloy
+
+### Gerar eventos de log no dev
+3. Port-forward e chamadas de sucesso/erro no app de teste.
+
+```bash
+kubectl -n dev-apps port-forward svc/myapp 18080:80
+curl -i http://127.0.0.1:18080/get
+curl -i http://127.0.0.1:18080/status/500
+```
+
+### Validar consulta no Grafana Explore
+4. Abrir Explore no Grafana e selecionar datasource `Loki`.
+5. Executar consultas basicas:
+
+```logql
+{namespace="dev-apps", app="myapp"}
+```
+
+```logql
+{namespace="dev-apps", pod=~"myapp-.*"}
+```
+
+6. Confirmar labels operacionais no resultado (`cluster`, `namespace`, `pod`, `container`, `app`, `environment`).
+
+### Criterios de aceite operacionais
+- logs do app em `dev` aparecem no Explore
+- filtros por `namespace`, `app` e `pod` retornam eventos coerentes
+- fluxo de ingestao ocorre com latencia aceitavel para o uso no homelab
+
 ### Evolucao posterior
 - promover o mesmo app de teste para `prd` apenas quando a fase de validacao em `dev` estiver concluida
