@@ -86,6 +86,14 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: observability
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      name: loki
+      namespace: observability
+      jsonPointers:
+        - /spec/persistentVolumeClaimRetentionPolicy
+        - /spec/volumeClaimTemplates
   syncPolicy:
     automated:
       prune: true
@@ -93,4 +101,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ApplyOutOfSyncOnly=true
-      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
