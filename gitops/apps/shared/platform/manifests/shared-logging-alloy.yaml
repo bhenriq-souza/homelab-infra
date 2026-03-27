@@ -109,12 +109,11 @@ data:
       }
 
      rule {
-        source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name", "__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-        separator     = ";"
-        regex         = "([^;]+);([^;]+);([^;]+);([^;]+)"
+        source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+        action        = "replace"
         target_label  = "__path__"
-        replacement   = "/var/log/pods/$1_$2_$3/$4/0.log"
-      }
+        separator     = "/"
+        replacement   = "/var/log/pods/*$1/$2/*.log"
     }
 
     loki.source.file "pods" {
