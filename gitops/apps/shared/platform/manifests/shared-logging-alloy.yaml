@@ -114,6 +114,7 @@ data:
         target_label  = "__path__"
         separator     = "/"
         replacement   = "/var/log/pods/*$1/$2/*.log"
+      }
     }
 
     loki.source.file "pods" {
