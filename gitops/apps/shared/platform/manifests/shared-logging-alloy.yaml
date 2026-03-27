@@ -108,12 +108,12 @@ data:
         replacement  = "homelab-k3s"
       }
 
-     rule {
+      rule {
         source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
         action        = "replace"
         target_label  = "__path__"
         separator     = "/"
-        replacement   = "/var/log/pods/*$1/$2/*.log"
+        replacement   = "/var/log/pods/*$1/*.log"
       }
     }
 
