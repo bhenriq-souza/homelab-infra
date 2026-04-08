@@ -14,3 +14,4 @@ Definir como segredos serão tratados sem exposição indevida no repositório.
 - tokens de CI
 - credenciais de acesso administrativo
 - segredos do app
+- credenciais de banco de dados (PostgreSQL)

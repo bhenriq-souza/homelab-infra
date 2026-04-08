@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - manifests/bootstrap-configmap.yaml
   - manifests/myapp
+  - manifests/postgresql

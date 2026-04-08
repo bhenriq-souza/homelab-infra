@@ -42,6 +42,8 @@
 ## Fase 8 - Integração com o app
 - preparar contratos de infra para frontend/backend
 - definir dependências operacionais do app
+- estabelecer baseline de banco de dados PostgreSQL no cluster (dev -> prd)
+- validar estratégia de backup/restore do banco antes da promoção para produção
 
 ## Fase 9 - Híbrido e fleet
 - consolidar conectividade on-prem + cloud

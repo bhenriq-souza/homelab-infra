@@ -319,6 +319,50 @@ Resultado esperado:
 kubectl -n dev-apps logs deploy/myapp --tail=100
 ```
 
+## Runbook - Validacao inicial do PostgreSQL em dev
+
+### Objetivo
+Validar rapidamente a instalacao do PostgreSQL no namespace `dev-apps`, incluindo estado do StatefulSet, volume persistente e teste basico de conexao.
+
+### Pre-check
+1. Confirmar app `dev-workloads` em `Synced` e `Healthy` no Argo CD.
+2. Confirmar recursos de banco criados no namespace.
+
+```bash
+kubectl -n dev-apps get statefulset,pod,svc,pvc | grep postgresql
+```
+
+Resultado esperado:
+- StatefulSet `postgresql` com `READY 1/1`
+- pod em `Running`
+- PVC `Bound`
+- service `postgresql` como `ClusterIP`
+
+### Teste de conectividade basica
+3. Executar teste de readiness via `pg_isready` no proprio pod.
+
+```bash
+kubectl -n dev-apps exec statefulset/postgresql -- sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+Resultado esperado:
+- retorno `accepting connections`
+
+4. Testar comando SQL simples.
+
+```bash
+kubectl -n dev-apps exec statefulset/postgresql -- sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 1;"'
+```
+
+Resultado esperado:
+- query concluida com sucesso
+
+### Pos-validacao
+5. Registrar evidencias minimas:
+- saida de `get statefulset,pod,svc,pvc`
+- saida do `pg_isready`
+- saida do `SELECT 1`
+
 Resultado esperado:
 - entradas de log das requisicoes `GET /get`
 - entradas de log das requisicoes `GET /status/500`

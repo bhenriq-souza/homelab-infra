@@ -145,3 +145,45 @@ kubectl -n argocd logs deploy/argocd-application-controller --tail=200 -f
 - sem novos `CrashLoopBackOff` no namespace `argocd`
 - tempo de sync reduzido/estavel para apps do bootstrap
 - ausencia de novos eventos de `OOMKilled`
+
+## PostgreSQL em dev - pod nao fica pronto
+
+### Sintoma
+- pod `postgresql-0` fica em `CrashLoopBackOff` ou `Pending`
+- readiness/liveness falhando
+
+### Possiveis causas
+- PVC nao foi provisionado ou nao ficou `Bound`
+- credenciais invalidas no Secret `postgresql-auth`
+- limite de recursos insuficiente no node
+
+### Passos de validacao
+1. Verificar estado geral dos recursos:
+
+```bash
+kubectl -n dev-apps get statefulset,pod,pvc,events --sort-by=.lastTimestamp
+```
+
+2. Verificar logs do pod:
+
+```bash
+kubectl -n dev-apps logs statefulset/postgresql --tail=200
+```
+
+3. Verificar Secret carregado no namespace:
+
+```bash
+kubectl -n dev-apps get secret postgresql-auth -o yaml
+```
+
+4. Validar pressao de recursos no cluster:
+
+```bash
+kubectl top node
+kubectl -n dev-apps top pod
+```
+
+### Acao corretiva
+- corrigir credenciais no Secret e ressincronizar o app
+- ajustar requests/limits do StatefulSet para o perfil do host
+- revisar StorageClass/PV local quando PVC nao estiver `Bound`

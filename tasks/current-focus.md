@@ -51,12 +51,12 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 - validacao de app de teste em `dev` concluida (healthcheck, endpoint de erro e logs no cluster)
 
 ## Pendencias ativas (proxima etapa)
-- implantar backend de logs (Loki) no escopo compartilhado
-- implantar coletor de logs com Grafana Alloy
-- integrar Alloy -> Loki -> Grafana para consulta de logs por namespace/app
-- definir retencao de logs conservadora para homelab single-node
-- documentar runbook de troubleshooting para pipeline de logs
-- consolidar execucao na fase `docs/backlog/phase-06-logs-centralizados.md`
+- consolidar validacao operacional da trilha de logs (Loki + Alloy + Grafana) no cluster
+- registrar evidencias de consulta por namespace/app no Grafana Explore
+- iniciar fase de PostgreSQL no ambiente `dev` com rollout GitOps incremental
+- validar conectividade app -> banco com servico interno `ClusterIP`
+- definir estrategia minima de backup/restore para o banco no homelab
+- consolidar plano e execucao em `docs/backlog/phase-08-postgresql-on-cluster.md`
 
 ## Riscos e cuidados operacionais
 - controlar consumo de recursos da stack (requests/limits conservadores)
@@ -65,4 +65,4 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 - evitar credenciais padrao em dashboards
 
 ## Proximo marco apos a phase-05
-Entrar na fase de logs centralizados com Loki + Grafana Alloy, mantendo rollout incremental e baixo consumo de recursos.
+Consolidar logs centralizados e avancar para baseline de PostgreSQL no ambiente `dev`, mantendo rollout incremental e baixo consumo de recursos.
