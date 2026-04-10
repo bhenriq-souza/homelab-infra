@@ -47,6 +47,15 @@ Sem isso, a troca de token federado falha.
 - ESO reconcilia por `refreshInterval`.
 - Reiniciar workload somente quando a app nao recarrega credencial dinamicamente.
 
+### Refresh manual (quando nao quiser esperar o intervalo)
+1. Verificar recurso:
+	- `kubectl get externalsecret postgresql-auth -n dev-apps`
+2. Forcar sincronizacao:
+	- `kubectl annotate externalsecret postgresql-auth -n dev-apps force-sync=$(date +%s) --overwrite`
+3. Validar status:
+	- `kubectl describe externalsecret postgresql-auth -n dev-apps`
+	- `kubectl get secret postgresql-auth -n dev-apps -o yaml | grep resourceVersion`
+
 ## Blast radius
 - Um `ClusterSecretStore` por ambiente logico (`dev`/`prd`).
 - Uma identidade Kubernetes por ambiente (`eso-gcp-dev` / `eso-gcp-prd`).

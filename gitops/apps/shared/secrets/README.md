@@ -27,3 +27,16 @@ Este diretorio contem o estado desejado para integracao de secrets sem chave JSO
 2. Aguardar `refreshInterval` do ExternalSecret ou forcar reconcile.
 3. Confirmar novo `resourceVersion` no Secret Kubernetes.
 4. Reiniciar workload consumidor se a aplicacao nao reler variaveis dinamicamente.
+
+## Intervalo atual do PostgreSQL dev
+- O ExternalSecret `postgresql-auth` em `dev-apps` usa `refreshInterval: 1h`.
+
+## Forcar refresh manual do ESO
+1. Confirmar que o ExternalSecret existe:
+	- `kubectl get externalsecret postgresql-auth -n dev-apps`
+2. Forcar reconcile imediato via annotation:
+	- `kubectl annotate externalsecret postgresql-auth -n dev-apps force-sync=$(date +%s) --overwrite`
+3. Validar reconciliacao:
+	- `kubectl describe externalsecret postgresql-auth -n dev-apps`
+	- `kubectl get secret postgresql-auth -n dev-apps -o yaml | grep resourceVersion`
+4. Confirmar que a aplicacao consumidora recebeu o novo valor (se necessario, reiniciar o pod).
