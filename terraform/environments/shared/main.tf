@@ -18,15 +18,17 @@ module "argocd_bootstrap" {
 module "gcp_eso_wif" {
   source = "../../modules/gcp-eso-wif"
 
-  create                               = var.gcp_eso_wif_enabled
-  project_id                           = var.gcp_project_id
-  project_number                       = var.gcp_project_number
-  wif_pool_id                          = var.gcp_wif_pool_id
-  wif_provider_id                      = var.gcp_wif_provider_id
-  kubernetes_issuer_uri                = var.kubernetes_oidc_issuer_uri
-  allowed_kubernetes_service_accounts  = var.gcp_allowed_kubernetes_service_accounts
-  allowed_secret_ids                   = var.gcp_allowed_secret_ids
-  use_service_account_impersonation    = var.gcp_use_service_account_impersonation
-  gcp_service_account_id               = var.gcp_eso_service_account_id
-  attribute_condition                  = var.gcp_wif_attribute_condition
+  create                              = var.gcp_eso_wif_enabled
+  project_id                          = var.gcp_project_id
+  project_number                      = var.gcp_project_number
+  wif_pool_id                         = var.gcp_wif_pool_id
+  wif_provider_id                     = var.gcp_wif_provider_id
+  kubernetes_issuer_uri               = var.kubernetes_oidc_issuer_uri
+  allowed_kubernetes_service_accounts = var.gcp_allowed_kubernetes_service_accounts
+  allowed_secret_ids                  = var.gcp_allowed_secret_ids
+  use_service_account_impersonation   = var.gcp_use_service_account_impersonation
+  gcp_service_account_id              = var.gcp_eso_service_account_id
+  attribute_condition                 = var.gcp_wif_attribute_condition
+  manage_project_services             = var.gcp_manage_project_services
+  manage_secret_iam_bindings          = var.gcp_manage_secret_iam_bindings
 }

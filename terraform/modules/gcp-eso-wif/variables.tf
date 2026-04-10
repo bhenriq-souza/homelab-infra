@@ -4,6 +4,18 @@ variable "create" {
   default     = false
 }
 
+variable "manage_project_services" {
+  description = "Quando true, habilita e gerencia APIs necessarias no projeto GCP."
+  type        = bool
+  default     = true
+}
+
+variable "manage_secret_iam_bindings" {
+  description = "Quando true, gerencia bindings IAM de acesso aos segredos."
+  type        = bool
+  default     = true
+}
+
 variable "project_id" {
   description = "Project ID que contem os secrets no Secret Manager."
   type        = string
@@ -67,8 +79,8 @@ variable "allowed_secret_ids" {
   default     = []
 
   validation {
-    condition     = !var.create || length(var.allowed_secret_ids) > 0
-    error_message = "Defina ao menos um secret em allowed_secret_ids quando create=true."
+    condition     = !var.create || !var.manage_secret_iam_bindings || length(var.allowed_secret_ids) > 0
+    error_message = "Defina ao menos um secret em allowed_secret_ids quando create=true e manage_secret_iam_bindings=true."
   }
 }
 

@@ -40,7 +40,7 @@ locals {
 }
 
 resource "google_project_service" "required" {
-  for_each = var.create ? local.required_services : toset([])
+  for_each = var.create && var.manage_project_services ? local.required_services : toset([])
 
   project = var.project_id
   service = each.value
@@ -54,7 +54,6 @@ resource "google_iam_workload_identity_pool" "this" {
   description               = "Federacao para ESO no cluster K3s homelab"
   disabled                  = false
 
-  depends_on = [google_project_service.required]
 }
 
 resource "google_iam_workload_identity_pool_provider" "this" {
@@ -98,7 +97,7 @@ resource "google_service_account_iam_member" "ksa_impersonation" {
 }
 
 resource "google_secret_manager_secret_iam_member" "secret_accessor_impersonation" {
-  for_each = var.create && var.use_service_account_impersonation ? toset(var.allowed_secret_ids) : toset([])
+  for_each = var.create && var.manage_secret_iam_bindings && var.use_service_account_impersonation ? toset(var.allowed_secret_ids) : toset([])
 
   project   = var.project_id
   secret_id = each.value
@@ -107,7 +106,7 @@ resource "google_secret_manager_secret_iam_member" "secret_accessor_impersonatio
 }
 
 resource "google_secret_manager_secret_iam_member" "secret_accessor_direct" {
-  for_each = var.create && !var.use_service_account_impersonation ? local.direct_secret_subject_bindings : {}
+  for_each = var.create && var.manage_secret_iam_bindings && !var.use_service_account_impersonation ? local.direct_secret_subject_bindings : {}
 
   project   = var.project_id
   secret_id = each.value.secret_id

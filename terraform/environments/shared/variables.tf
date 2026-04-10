@@ -165,3 +165,15 @@ variable "gcp_wif_attribute_condition" {
   type        = string
   default     = ""
 }
+
+variable "gcp_manage_project_services" {
+  description = "Quando true, Terraform gerencia habilitacao das APIs GCP necessarias."
+  type        = bool
+  default     = true
+}
+
+variable "gcp_manage_secret_iam_bindings" {
+  description = "Quando true, Terraform gerencia IAM dos segredos no Secret Manager."
+  type        = bool
+  default     = true
+}
