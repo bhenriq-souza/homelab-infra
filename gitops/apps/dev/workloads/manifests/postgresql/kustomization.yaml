@@ -5,5 +5,4 @@ resources:
   - service.yaml
   - statefulset.yaml
   - networkpolicy.yaml
-  - middlewaretcp.yaml
   - ingressroutetcp.yaml
