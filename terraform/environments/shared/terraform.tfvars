@@ -22,3 +22,21 @@ kubeconfig_path = "~/.kube/config-homelab.yaml"
 
 # Opcional: forcar contexto especifico do kubeconfig.
 kubeconfig_context = "default"
+
+# GCP Secret Manager + ESO + Workload Identity Federation
+# Habilite apenas quando o issuer OIDC do K3s estiver acessivel externamente.
+# gcp_eso_wif_enabled = true
+# gcp_project_id      = "homelab-492918"
+# gcp_project_number  = "702302784311"
+# gcp_region          = "us-central1"
+# gcp_wif_pool_id     = "homelab-k3s-pool"
+# gcp_wif_provider_id = "homelab-k3s-provider"
+# kubernetes_oidc_issuer_uri = "https://oidc.homelab.local"
+#
+# Lista de segredos permitidos para leitura (criados manualmente no GCP).
+# gcp_allowed_secret_ids = [
+#   "homelab-dev-postgres-password",
+#   "homelab-dev-postgres-url",
+#   "homelab-prd-postgres-password",
+#   "homelab-prd-postgres-url"
+# ]
