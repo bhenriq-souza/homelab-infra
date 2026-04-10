@@ -1,0 +1,13 @@
+apiVersion: traefik.io/v1alpha1
+kind: MiddlewareTCP
+metadata:
+  name: postgresql-lan-allowlist
+  namespace: dev-apps
+  labels:
+    app.kubernetes.io/name: postgresql
+    homelab.io/environment: dev
+    homelab.io/component: database
+spec:
+  ipAllowList:
+    sourceRange:
+      - 192.168.15.0/24

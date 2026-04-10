@@ -9,4 +9,4 @@ Registrar quais serviços podem ser acessados, por quem e por qual caminho.
 | Grafana | local | privado | operador | definir estratégia de autenticação |
 | Loki | local | privado | operador/plataforma | acesso via gateway HTTP |
 | Argo CD | local/cloud | privado | operador | detalhar no repo GitOps |
-| PostgreSQL | local | privado interno | workloads autorizados no cluster | sem exposição por Ingress/LB; acesso via Service ClusterIP |
+| PostgreSQL | local | privado interno | workloads autorizados no cluster e laptop admin na LAN | via Traefik TCP (`postgres.dev.homelab.local:5432`) com allowlist `192.168.15.0/24` e sem exposição para internet |

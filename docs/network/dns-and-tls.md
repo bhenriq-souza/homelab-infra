@@ -17,5 +17,6 @@ Definir estratégia mínima de nomes e certificados para:
 - Argo CD: `argocd.homelab.local`
 - Grafana: `grafana.homelab.local`
 - Loki (gateway): `loki.homelab.local`
+- PostgreSQL (TCP): `postgres.dev.homelab.local:5432`
 
 Todos os nomes devem resolver para o endpoint local do Traefik no cluster.
