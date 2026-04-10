@@ -10,6 +10,8 @@ spec:
   valuesContent: |-
     ports:
       postgres:
+        expose:
+          default: true
         port: 5432
         exposedPort: 5432
         protocol: TCP

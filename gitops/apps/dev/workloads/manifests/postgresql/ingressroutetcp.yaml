@@ -12,8 +12,6 @@ spec:
     - postgres
   routes:
     - match: HostSNI(`*`)
-      middlewares:
-        - name: postgresql-lan-allowlist
       services:
         - name: postgresql
           port: 5432
