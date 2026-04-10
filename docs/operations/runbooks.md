@@ -472,3 +472,60 @@ curl -vk https://argocd.homelab.local
 - UI acessivel por `https://argocd.homelab.local`
 - login e navegacao sem reconexoes frequentes de sessao
 - operacao diaria sem dependencia de `kubectl port-forward`
+
+## Runbook - Retomada do fluxo GCP Secret Manager + ESO + WIF
+
+### Objetivo
+Retomar a configuracao de secrets federados quando o ambiente estiver parcialmente aplicado (WIF criado, mas stores/externalsecrets ainda sem `Ready`).
+
+### Sinais do problema
+- `ClusterSecretStore` com `Ready=False`.
+- Evento recorrente com `invalid_grant` e mensagem sobre issuer.
+- `ExternalSecret` com `SecretSyncedError`.
+- `Secret` alvo nao criado no namespace da aplicacao.
+
+### Pre-check
+1. Validar WIF no GCP:
+
+```bash
+gcloud iam workload-identity-pools list --location=global --project=homelab-492918
+gcloud iam workload-identity-pools providers list --location=global --workload-identity-pool=homelab-k3s-pool --project=homelab-492918
+```
+
+2. Validar issuer publico (rede externa):
+
+```bash
+curl -fsSL https://<issuer>/.well-known/openid-configuration
+curl -fsSL https://<issuer>/openid/v1/jwks
+```
+
+Critério para seguir:
+- pool e provider em `ACTIVE`
+- discovery e JWKS acessiveis por HTTPS com certificado valido
+
+### Correcao e aplicacao
+3. Atualizar issuer no Terraform `shared` (`kubernetes_oidc_issuer_uri`).
+4. Aplicar Terraform no ambiente `shared`.
+5. Garantir IAM por secret para principals federados (`roles/secretmanager.secretAccessor`).
+
+### Reconcile e validacao final
+6. Forcar reconcile do store e do ExternalSecret:
+
+```bash
+kubectl annotate clustersecretstore gcp-sm-dev force-sync=$(date +%s) --overwrite
+kubectl annotate clustersecretstore gcp-sm-prd force-sync=$(date +%s) --overwrite
+kubectl annotate externalsecret postgresql-auth -n dev-apps force-sync=$(date +%s) --overwrite
+```
+
+7. Validar estado:
+
+```bash
+kubectl get clustersecretstore gcp-sm-dev gcp-sm-prd
+kubectl get externalsecret postgresql-auth -n dev-apps
+kubectl get secret postgresql-auth -n dev-apps
+```
+
+### Criterios de sucesso
+- `ClusterSecretStore` com `Ready=True`
+- `ExternalSecret` com `Ready=True`
+- `Secret postgresql-auth` materializado no namespace `dev-apps`

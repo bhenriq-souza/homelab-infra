@@ -82,3 +82,39 @@ Sem isso, a troca de token federado falha.
 - Falha de conectividade entre cluster e endpoints Google impede reconciliacao.
 - Erros de IAM por secret ausente ou binding incompleto aparecem como falha no ExternalSecret.
 - Em cluster single-node, indisponibilidade do node impacta todo o fluxo de reconciliacao.
+
+## Status atual (2026-04-10)
+### Concluido
+- Terraform `shared` aplicado com sucesso para criar WIF Pool/Provider.
+- Outputs confirmados:
+	- `gcp_wif_audience = //iam.googleapis.com/projects/702302784311/locations/global/workloadIdentityPools/homelab-k3s-pool/providers/homelab-k3s-provider`
+	- `gcp_wif_pool_id = homelab-k3s-pool`
+	- `gcp_wif_provider_id = homelab-k3s-provider`
+- ESO instalado via Argo CD e recursos de `shared-secrets-config` presentes (`ServiceAccounts` e `ClusterSecretStore`).
+
+### Pendente bloqueante
+- `ClusterSecretStore` ainda nao esta `Ready`.
+- Erro mais recente observado no evento do store:
+	- `invalid_grant: Error connecting to the given credential's issuer`
+- Implicacao: `ExternalSecret postgresql-auth` em `dev-apps` segue com `SecretSyncedError` e o `Secret postgresql-auth` nao foi materializado.
+
+### Pendente de autorizacao no Secret Manager
+- Ainda e necessario confirmar (ou aplicar) IAM por secret para os principals federados:
+	- `principal://iam.googleapis.com/projects/702302784311/locations/global/workloadIdentityPools/homelab-k3s-pool/subject/system:serviceaccount:external-secrets:eso-gcp-dev`
+	- `principal://iam.googleapis.com/projects/702302784311/locations/global/workloadIdentityPools/homelab-k3s-pool/subject/system:serviceaccount:external-secrets:eso-gcp-prd`
+- Papel necessario por secret: `roles/secretmanager.secretAccessor`.
+
+## Checklist de retomada
+1. Publicar issuer OIDC em dominio publico com TLS valido.
+2. Validar externamente:
+	 - `https://<issuer>/.well-known/openid-configuration`
+	 - `https://<issuer>/openid/v1/jwks`
+3. Atualizar `kubernetes_oidc_issuer_uri` no Terraform `shared` e aplicar.
+4. Garantir IAM de `secretAccessor` para os dois principals federados em todos os secrets exigidos.
+5. Forcar reconcile:
+	 - `kubectl annotate clustersecretstore gcp-sm-dev force-sync=$(date +%s) --overwrite`
+	 - `kubectl annotate externalsecret postgresql-auth -n dev-apps force-sync=$(date +%s) --overwrite`
+6. Validar fim a fim:
+	 - `kubectl get clustersecretstore gcp-sm-dev`
+	 - `kubectl get externalsecret postgresql-auth -n dev-apps`
+	 - `kubectl get secret postgresql-auth -n dev-apps`
