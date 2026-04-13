@@ -9,6 +9,46 @@ Centralizar procedimentos operacionais repetíveis.
 - preparar plano de mudança
 - restaurar configuração
 
+## Regra operacional - Perfis de shell para Kubernetes e Terraform
+
+### Objetivo
+Evitar execucao de `kubectl` e `terraform` contra o cluster errado por causa de contexto residual no shell.
+
+### Regra obrigatoria
+Antes de qualquer operacao contra cluster, executar explicitamente a funcao de perfil correspondente.
+
+Perfis disponiveis no shell:
+- `use_homelab`
+- `use_ailab`
+
+Funcao de verificacao:
+- `kctx_status`
+
+### Politica de uso
+- qualquer operacao no `homelab` deve ser precedida por `use_homelab`
+- qualquer operacao no `ai-lab` deve ser precedida por `use_ailab`
+- `kctx_status` deve ser usado para confirmar `KUBECONFIG`, `KUBE_CONTEXT`, `kubectl current-context` e `api-server`
+- nao confiar no contexto herdado da sessao anterior
+
+### Exemplos
+
+```bash
+use_homelab
+kctx_status
+kubectl get nodes
+terraform -chdir=terraform/clusters/homelab/bootstrap plan
+```
+
+```bash
+use_ailab
+kctx_status
+kubectl get nodes
+terraform -chdir=terraform/clusters/ai-lab/bootstrap plan
+```
+
+### Criterio operacional
+Se a troca de perfil nao for feita explicitamente antes do comando, a operacao deve ser considerada invalida.
+
 ## Runbook - Bootstrap inicial K3s single-node
 
 ### Objetivo
@@ -102,6 +142,123 @@ Regras de segurança obrigatórias:
 Observação operacional:
 - a cópia externa do kubeconfig pode precisar ser atualizada futuramente por rotação/renovação de certificados inline
 
+## Runbook - Criacao do kubeconfig do ai-lab
+
+### Objetivo
+Criar um kubeconfig dedicado em `~/.kube/config-ai-lab.yaml` e um contexto chamado `ai-lab` para o novo cluster, sem misturar esse acesso com o kubeconfig do `homelab`.
+
+### Regra principal
+O contexto do `ai-lab` nao e criado do zero por Terraform nem por GitOps. Ele nasce do proprio provisionamento do cluster.
+
+Voce sempre precisa de cinco informacoes reais:
+- endpoint da API Kubernetes
+- CA do cluster
+- credencial de autenticacao (certificado, token ou plugin do provedor)
+- nome do contexto
+- conectividade de rede ate a API
+
+Sem isso, nao existe kubeconfig funcional para o `ai-lab`; existe apenas um caminho de arquivo reservado.
+
+### Caminho A - ai-lab em cluster self-managed
+Use este caminho se o `ai-lab` for um K3s ou outro Kubernetes administrado por voce em VM ou host proprio.
+
+Observacao:
+- se o K3s do `ai-lab` estiver rodando no mesmo laptop admin que executa `kubectl` e `terraform`, manter `server: https://127.0.0.1:6443` no kubeconfig e valido
+- nessa situacao, o `ai-lab` nao e um cluster "dentro" de outro cluster; ele e o proprio K3s local reaproveitado como destino do bootstrap
+
+1. Obter o kubeconfig administrativo no host do cluster.
+
+Exemplo para K3s:
+
+```bash
+sudo cat /etc/rancher/k3s/k3s.yaml
+```
+
+2. Copiar o arquivo para o laptop administrador em caminho dedicado.
+
+```bash
+mkdir -p ~/.kube
+scp <usuario>@<host-ai-lab>:/etc/rancher/k3s/k3s.yaml ~/.kube/config-ai-lab.yaml
+chmod 700 ~/.kube
+chmod 600 ~/.kube/config-ai-lab.yaml
+```
+
+3. Ajustar o campo `server:` no arquivo copiado.
+
+Regra:
+- substituir `https://127.0.0.1:6443` pelo IP ou DNS realmente acessivel do host do `ai-lab`
+
+4. Renomear o contexto para `ai-lab`.
+
+```bash
+kubectl config rename-context default ai-lab --kubeconfig ~/.kube/config-ai-lab.yaml
+```
+
+5. Validar o arquivo novo.
+
+```bash
+kubectl config get-contexts --kubeconfig ~/.kube/config-ai-lab.yaml
+kubectl config current-context --kubeconfig ~/.kube/config-ai-lab.yaml
+kubectl cluster-info --kubeconfig ~/.kube/config-ai-lab.yaml
+kubectl get nodes --kubeconfig ~/.kube/config-ai-lab.yaml
+```
+
+Resultado esperado:
+- arquivo `~/.kube/config-ai-lab.yaml` existente
+- contexto `ai-lab` visivel no arquivo
+- resposta valida do endpoint da API
+
+### Caminho B - ai-lab em cluster managed
+Use este caminho se o `ai-lab` for criado por um provedor como GKE, EKS ou AKS.
+
+Fluxo:
+1. usar o CLI do provedor para materializar credenciais no kubeconfig
+2. exportar um kubeconfig dedicado apenas para o cluster novo
+3. renomear o contexto exportado para `ai-lab`
+
+Exemplo para GKE:
+
+```bash
+gcloud container clusters get-credentials <cluster-name> \
+	--region <region> \
+	--project <project-id>
+
+kubectl --context <contexto-gerado-pelo-gke> config view --raw --minify --flatten > ~/.kube/config-ai-lab.yaml
+kubectl config rename-context <contexto-gerado-pelo-gke> ai-lab --kubeconfig ~/.kube/config-ai-lab.yaml
+chmod 600 ~/.kube/config-ai-lab.yaml
+```
+
+Depois validar:
+
+```bash
+kubectl config get-contexts --kubeconfig ~/.kube/config-ai-lab.yaml
+kubectl config current-context --kubeconfig ~/.kube/config-ai-lab.yaml
+kubectl cluster-info --kubeconfig ~/.kube/config-ai-lab.yaml
+kubectl get nodes --kubeconfig ~/.kube/config-ai-lab.yaml
+```
+
+### Integracao com Terraform
+Quando o arquivo estiver funcional, o entrypoint do novo cluster pode usar:
+
+```tfvars
+kubeconfig_path    = "~/.kube/config-ai-lab.yaml"
+kubeconfig_context = "ai-lab"
+```
+
+### Checklist minimo antes do primeiro terraform plan
+0. executar `use_ailab`
+1. executar `kctx_status`
+2. `kubectl config current-context --kubeconfig ~/.kube/config-ai-lab.yaml`
+3. `kubectl cluster-info --kubeconfig ~/.kube/config-ai-lab.yaml`
+4. `kubectl get nodes --kubeconfig ~/.kube/config-ai-lab.yaml`
+5. somente entao executar `terraform -chdir=terraform/clusters/ai-lab/bootstrap plan`
+
+### Riscos comuns
+- copiar kubeconfig com `server: https://127.0.0.1:6443`
+- usar um contexto default sem renomear para `ai-lab`
+- apontar `terraform.tfvars` para um arquivo inexistente
+- reutilizar kubeconfig de outro cluster so para "destravar" o Terraform
+
 ### Validação final e registro
 10. Validar reboot do host e retorno automático do K3s.
 
@@ -149,9 +306,15 @@ helm version
 2. Definir kubeconfig e contexto alvo para a sessao atual.
 
 ```bash
+use_homelab
+kctx_status
 export KUBECONFIG=/home/<usuario>/.kube/config-homelab.yaml
 export KUBE_CONTEXT=default
 ```
+
+Observacao:
+- quando as funcoes `use_homelab` e `use_ailab` estiverem disponiveis no shell, elas sao o mecanismo preferencial e obrigatorio para selecao de perfil
+- os `export` acima servem como referencia de diagnostico e compatibilidade
 
 3. Validar contexto e conectividade com a API do cluster.
 
@@ -182,9 +345,9 @@ Comportamento esperado:
 5. Validar estado Terraform por ambiente.
 
 ```bash
-terraform -chdir=terraform/environments/shared output
-terraform -chdir=terraform/environments/dev output
-terraform -chdir=terraform/environments/prd output
+terraform -chdir=terraform/clusters/homelab/bootstrap output
+terraform -chdir=terraform/clusters/homelab/dev output
+terraform -chdir=terraform/clusters/homelab/prd output
 ```
 
 6. Validar recursos no cluster.
@@ -212,12 +375,12 @@ registry.terraform.io does not have a provider named registry.terraform.io/hashi
 Validacao:
 
 ```bash
-terraform -chdir=terraform/environments/shared providers
+terraform -chdir=terraform/clusters/homelab/bootstrap providers
 ```
 
 Acao:
 - confirmar source `gavinbunney/kubectl` no modulo `terraform/modules/argocd-bootstrap/versions.tf`
-- reexecutar `terraform -chdir=terraform/environments/shared init -upgrade`
+- reexecutar `terraform -chdir=terraform/clusters/homelab/bootstrap init -upgrade`
 
 #### Erro de contexto Kubernetes inexistente
 Sintoma:
@@ -266,8 +429,8 @@ Acao:
 
 ### Validacao recomendada
 ```bash
-terraform -chdir=terraform/environments/shared plan
-terraform -chdir=terraform/environments/shared apply
+terraform -chdir=terraform/clusters/homelab/bootstrap plan
+terraform -chdir=terraform/clusters/homelab/bootstrap apply
 kubectl -n argocd get pods
 kubectl -n argocd get events --sort-by=.lastTimestamp | tail -n 30
 kubectl -n argocd logs deploy/argocd-application-controller --tail=200
@@ -440,7 +603,7 @@ Substituir o uso recorrente de `port-forward` por acesso estavel via hostname in
 - cert-manager opcional (quando usado, informar `ClusterIssuer` no `terraform.tfvars` do `shared`)
 
 ### Configuracao Terraform (shared)
-1. Confirmar no arquivo `terraform/environments/shared/terraform.tfvars`:
+1. Confirmar no arquivo `terraform/clusters/homelab/bootstrap/terraform.tfvars`:
 	- `argocd_ingress_enabled = true`
 	- `argocd_ingress_hostname = "argocd.homelab.local"`
 	- `argocd_ingress_class_name = "traefik"`
@@ -451,8 +614,8 @@ Substituir o uso recorrente de `port-forward` por acesso estavel via hostname in
 
 ### Aplicacao
 ```bash
-terraform -chdir=terraform/environments/shared plan
-terraform -chdir=terraform/environments/shared apply
+terraform -chdir=terraform/clusters/homelab/bootstrap plan
+terraform -chdir=terraform/clusters/homelab/bootstrap apply
 ```
 
 ### Validacao

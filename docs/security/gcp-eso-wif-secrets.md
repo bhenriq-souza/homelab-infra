@@ -64,7 +64,7 @@ Sem isso, a troca de token federado falha.
 
 ## Rollout resumido
 1. Configurar issuer OIDC publico do K3s.
-2. Habilitar variaveis `gcp_eso_wif_*` no Terraform de `environments/shared`.
+2. Habilitar variaveis `gcp_eso_wif_*` no Terraform de `clusters/homelab/bootstrap`.
 3. Aplicar Terraform e capturar output `gcp_wif_audience`.
 4. Atualizar audience dos `ClusterSecretStore` com o valor real.
 5. Commitar e sincronizar Argo CD.

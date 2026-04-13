@@ -29,6 +29,10 @@ O laboratório será composto por:
 - `finances-app-frontend`
 - `finances-app-backend`
 
+Status atual:
+- `homelab-infra`: documentacao, backlog, Terraform e contexto operacional
+- `homelab-gitops`: fonte ativa de verdade do Argo CD para o cluster atual
+
 ## Objetivos técnicos
 - manter simplicidade operacional
 - permitir evolução por fases

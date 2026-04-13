@@ -58,7 +58,7 @@ Implantar e configurar PostgreSQL com GitOps no ambiente `dev`, validar conectiv
   - mitigar com Secrets e politica de nao versionar segredo real
 
 ## Plano de execucao
-1. criar manifests GitOps de PostgreSQL em `gitops/apps/dev/workloads`
+1. criar manifests GitOps de PostgreSQL em `homelab-gitops/clusters/homelab/workloads/dev`
 2. sincronizar e validar estado do StatefulSet/PVC/Service
 3. executar teste de conectividade no namespace `dev-apps`
 4. documentar runbook de operacao e troubleshooting

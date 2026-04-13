@@ -81,10 +81,10 @@ Decisao para o ambiente atual (dev):
 ## Materializacao GitOps desta fase
 
 ### Artefatos aplicados
-- `gitops/apps/shared/platform/manifests/shared-logging-loki.yaml`
-- `gitops/apps/shared/platform/manifests/shared-logging-alloy.yaml`
-- `gitops/apps/shared/platform/manifests/observability-kube-prometheus-stack.yaml` (datasource Loki)
-- `gitops/apps/shared/platform/kustomization.yaml` (inclusao dos novos recursos)
+- `homelab-gitops/clusters/homelab/platform/manifests/shared-logging-loki.yaml`
+- `homelab-gitops/clusters/homelab/platform/manifests/shared-logging-alloy.yaml`
+- `homelab-gitops/clusters/homelab/platform/manifests/observability-kube-prometheus-stack.yaml` (datasource Loki)
+- `homelab-gitops/clusters/homelab/platform/kustomization.yaml` (inclusao dos novos recursos)
 
 ### Parametros operacionais definidos
 - Loki em modo `SingleBinary`, sem HA, com retencao inicial de 7 dias

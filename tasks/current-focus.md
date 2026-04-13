@@ -13,6 +13,8 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 - base Terraform criada com entrypoints `shared`, `dev` e `prd`
 - Argo CD bootstrapado com Terraform
 - sincronizacao Argo CD <-> repositorio validada
+- cutover GitOps concluido para o repositorio dedicado `homelab-gitops`
+- `homelab-root` e apps filhas apontando para `clusters/homelab` no repositorio GitOps dedicado
 - `shared-observability` sincronizado e saudavel no Argo CD
 - Prometheus e Grafana operacionais para metricas basicas da plataforma
 - app de teste em `dev` (`myapp` com `httpbin`) validado com respostas de sucesso e erro
@@ -57,6 +59,15 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 - validar conectividade app -> banco com servico interno `ClusterIP`
 - definir estrategia minima de backup/restore para o banco no homelab
 - consolidar plano e execucao em `docs/backlog/phase-08-postgresql-on-cluster.md`
+- manter toda mudanca GitOps em `homelab-gitops/clusters/` apos a remocao do legado
+
+## Nota operacional paralela - Expansao do ai-lab
+- estrutura GitOps `clusters/ai-lab` criada e validada em `homelab-gitops`
+- bootstrap Terraform de `terraform/clusters/ai-lab/bootstrap` aplicado e sem pendencias de plano
+- `argocd` e `ai-lab-root` criados no cluster `ai-lab`
+- o `ai-lab` roda em uma instancia Ubuntu sobre WSL em um host Windows 11
+- bloqueio atual: `ai-lab-root` em `Unknown` porque o `argocd-repo-server` nao consegue acessar o repositorio GitHub por timeout TCP `443`
+- proxima analise do `ai-lab` deve focar em egress/rede dos pods, nao em Terraform
 
 ## Riscos e cuidados operacionais
 - controlar consumo de recursos da stack (requests/limits conservadores)

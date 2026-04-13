@@ -24,7 +24,7 @@ Did you intend to use gavinbunney/kubectl?
 - resolucao implicita para `hashicorp/kubectl` em vez de `gavinbunney/kubectl`
 
 ### Passos de validacao
-1. Executar `terraform -chdir=terraform/environments/shared providers`
+1. Executar `terraform -chdir=terraform/clusters/homelab/bootstrap providers`
 2. Confirmar se aparece `hashicorp/kubectl` na arvore de providers
 3. Conferir se o modulo usado por `shared` declara `source = "gavinbunney/kubectl"`
 
@@ -123,15 +123,15 @@ helm -n argocd get values argocd -a
 	- `timeout.reconciliation=300s` e `timeout.reconciliation.jitter=60s`
 	- `notifications.enabled=false` e `dex.enabled=false` (quando nao utilizados)
 - caso necessario, ajustar override por ambiente em:
-	- `terraform/environments/shared/variables.tf` (`argocd_helm_values_override`)
+	- `terraform/clusters/homelab/bootstrap/variables.tf` (`argocd_helm_values_override`)
 - para uso diario da UI, preferir exposicao por Ingress/TLS em vez de `kubectl port-forward` recorrente, reduzindo instabilidade de streams gRPC em redes com jitter.
 
 ### Validacao pos-correcao
 1. Reaplicar `shared`:
 
 ```bash
-terraform -chdir=terraform/environments/shared plan
-terraform -chdir=terraform/environments/shared apply
+terraform -chdir=terraform/clusters/homelab/bootstrap plan
+terraform -chdir=terraform/clusters/homelab/bootstrap apply
 ```
 
 2. Forcar uma sincronizacao de app com mudanca pequena e observar estabilidade:
@@ -145,6 +145,74 @@ kubectl -n argocd logs deploy/argocd-application-controller --tail=200 -f
 - sem novos `CrashLoopBackOff` no namespace `argocd`
 - tempo de sync reduzido/estavel para apps do bootstrap
 - ausencia de novos eventos de `OOMKilled`
+
+## Argo CD no ai-lab - root app em `Unknown` por timeout no GitHub
+
+### Sintoma
+- a `Application` `ai-lab-root` existe, mas fica com `Sync Status = Unknown`
+- o Argo CD mostra erro ao carregar o estado alvo do repositorio GitOps
+
+Erro observado:
+
+```text
+Failed to load target state: failed to generate manifest for source 1 of 1: rpc error: code = Unknown desc = Get "https://github.com/bhenriq-souza/homelab-gitops.git/info/refs?service=git-upload-pack": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+```
+
+### Contexto operacional relevante
+- o `ai-lab` roda em uma instancia Ubuntu sobre WSL em um host Windows 11
+- o acesso administrativo usa `~/.kube/config-ai-lab.yaml`
+- antes de qualquer comando, executar `use_ailab` e validar com `kctx_status`
+- o erro atual ocorre no `argocd-repo-server`, nao no `argocd-server`
+
+### Possiveis causas
+- pods do cluster sem conectividade de saida TCP `443` para endpoints do GitHub
+- comportamento especifico de egress/rede do K3s rodando sobre WSL
+- bloqueio seletivo fora do Kubernetes, mesmo com DNS funcional e NAT aparente no host
+
+### Passos de validacao
+1. Confirmar o status do root app:
+
+```bash
+use_ailab
+kubectl -n argocd get applications.argoproj.io
+kubectl -n argocd describe application ai-lab-root
+```
+
+2. Confirmar logs do `repo-server`:
+
+```bash
+use_ailab
+kubectl -n argocd logs deploy/argocd-repo-server --tail=200
+```
+
+3. Comparar egress do host e de um pod:
+
+```bash
+curl -I https://github.com
+
+use_ailab
+kubectl run netcheck --rm -i --restart=Never --image=curlimages/curl:8.12.1 --command -- sh -c 'curl -4 -v --connect-timeout 5 --max-time 10 https://github.com -o /dev/null'
+```
+
+4. Validar alcance de rede basico de um pod:
+
+```bash
+use_ailab
+kubectl run netcheck --rm -i --restart=Never --image=curlimages/curl:8.12.1 --command -- sh -c 'curl -k -I --max-time 10 https://kubernetes.default.svc && curl -I --max-time 10 https://1.1.1.1'
+```
+
+### Evidencia coletada ate agora
+- `terraform -chdir=terraform/clusters/ai-lab/bootstrap plan -no-color` retorna `No changes`
+- `argocd`, `ai-lab-root` e o secret inicial de admin foram criados com sucesso
+- o `argocd-repo-server` registra `git fetch origin --tags --force --prune failed timeout after 1m30s`
+- DNS para `github.com` resolve corretamente dentro do cluster
+- a conexao TCP para `github.com:443` expira a partir de um pod comum
+- a conexao para a API do Kubernetes funciona normalmente a partir do mesmo pod
+
+### Acao corretiva
+- ainda nao definida
+- a trilha principal de investigacao deve focar em egress dos pods do `ai-lab` no ambiente Ubuntu sobre WSL no Windows 11
+- evitar tratar como problema de Terraform ou credencial do Argo CD enquanto o timeout TCP externo persistir
 
 ## PostgreSQL em dev - pod nao fica pronto
 

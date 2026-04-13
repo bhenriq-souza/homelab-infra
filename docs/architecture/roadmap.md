@@ -48,3 +48,5 @@
 ## Fase 9 - Híbrido e fleet
 - consolidar conectividade on-prem + cloud
 - preparar base para gestão multi-cluster
+- definir estrutura GitOps cluster-first para novos clusters
+- padronizar bootstrap do Argo CD por cluster
