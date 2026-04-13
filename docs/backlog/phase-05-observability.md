@@ -115,7 +115,7 @@ Para o momento atual do homelab, `kube-prometheus-stack` enxuto oferece melhor r
 - namespace `observability` criado via `CreateNamespace=true`
 
 ### Diretriz de organizacao
-- tudo que for observabilidade base da plataforma permanece em `gitops/apps/shared/platform`
+- tudo que for observabilidade base da plataforma permanece em `homelab-gitops/clusters/homelab/platform`
 - customizacoes de workloads continuam nos caminhos de `dev` e `prd`
 
 ## Estrutura sugerida de diretorios e arquivos
@@ -123,13 +123,9 @@ Para o momento atual do homelab, `kube-prometheus-stack` enxuto oferece melhor r
 Estrutura-alvo desta fase:
 
 ```text
-gitops/
-  bootstrap/
-    root/
-      applications/
-        shared-platform.yaml
-  apps/
-    shared/
+homelab-gitops/
+  clusters/
+    homelab/
       platform/
         kustomization.yaml
         manifests/

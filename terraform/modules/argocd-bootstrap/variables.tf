@@ -31,7 +31,7 @@ variable "gitops_target_revision" {
 variable "gitops_root_path" {
   description = "Path da aplicacao raiz no repositorio GitOps."
   type        = string
-  default     = "gitops/bootstrap/root"
+  default     = "clusters/homelab/bootstrap/root"
 }
 
 variable "argocd_helm_values_override" {
