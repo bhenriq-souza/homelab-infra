@@ -1,59 +1,32 @@
-# Shared Secrets (GCP Secret Manager + ESO + WIF)
+# Shared Secrets (GCP Secret Manager + ESO + Service Account Key)
 
-Este diretorio contem o estado desejado para integracao de secrets sem chave JSON.
+Este diretorio contem o estado desejado para integracao de secrets usando chave JSON da Google Service Account, sem Workload Identity Federation.
 
-## Ordem de deploy
-1. Aplicar Terraform do ambiente `shared` com `gcp_eso_wif_enabled = true`.
-2. Validar outputs de WIF no Terraform.
-3. Substituir `PROJECT_NUMBER` nos `ClusterSecretStore` (ou ajustar pool/provider se customizados).
-4. Commitar e deixar Argo CD sincronizar `shared-secrets-operator` e `shared-secrets-config`.
-5. Aplicar ExternalSecrets dos workloads (`dev`/`prd`).
+## Objetivo
+- Usar GCP Secret Manager como fonte unica de verdade.
+- Usar ESO para sincronizar em Secrets nativos do Kubernetes.
+- Manter segregacao por ambiente (`dev` e `prd`).
+- Manter segredo sensivel fora do Git.
 
-## Dependencias
-- K3s com issuer OIDC acessivel externamente (discovery + JWKS).
-- APIs GCP habilitadas pelo Terraform.
-- Secrets ja criados manualmente no Secret Manager.
-- Fluxo padrao usa principal federado direto (`gcp_use_service_account_impersonation = false`).
+## Fluxo resumido
+1. Armazenar a chave local em `secrets/<ambiente>/gcp-sa.json` (arquivo ignorado pelo Git).
+2. Executar `scripts/apply-gcp-sa-key-secret.sh <ambiente>` para criar/atualizar o Secret no namespace `external-secrets`.
+3. O `ClusterSecretStore` do ambiente autentica no GCP via `auth.secretRef`.
+4. Cada `ExternalSecret` usa o `ClusterSecretStore` correspondente e sincroniza o Secret da aplicacao.
+
+## Nomes de Secret por ambiente
+- `dev`: `eso-gcp-sa-key-dev`
+- `prd`: `eso-gcp-sa-key-prd`
 
 ## Validacao rapida
-- `kubectl get pods -n external-secrets`
-- `kubectl get clustersecretstore`
+- `kubectl get secret -n external-secrets eso-gcp-sa-key-dev`
+- `kubectl get clustersecretstore gcp-sm-dev -o yaml`
 - `kubectl describe clustersecretstore gcp-sm-dev`
 - `kubectl get externalsecret -n dev-apps`
-- `kubectl get secret postgresql-auth -n dev-apps`
+- `kubectl get secret -n dev-apps postgresql-auth`
 
-## Rotacao de secret
-1. Criar nova versao no Secret Manager (mesma chave).
-2. Aguardar `refreshInterval` do ExternalSecret ou forcar reconcile.
-3. Confirmar novo `resourceVersion` no Secret Kubernetes.
-4. Reiniciar workload consumidor se a aplicacao nao reler variaveis dinamicamente.
-
-## Intervalo atual do PostgreSQL dev
-- O ExternalSecret `postgresql-auth` em `dev-apps` usa `refreshInterval: 1h`.
-
-## Forcar refresh manual do ESO
-1. Confirmar que o ExternalSecret existe:
-	- `kubectl get externalsecret postgresql-auth -n dev-apps`
-2. Forcar reconcile imediato via annotation:
-	- `kubectl annotate externalsecret postgresql-auth -n dev-apps force-sync=$(date +%s) --overwrite`
-3. Validar reconciliacao:
-	- `kubectl describe externalsecret postgresql-auth -n dev-apps`
-	- `kubectl get secret postgresql-auth -n dev-apps -o yaml | grep resourceVersion`
-4. Confirmar que a aplicacao consumidora recebeu o novo valor (se necessario, reiniciar o pod).
-
-## Snapshot operacional (2026-04-10)
-### Estado consolidado
-- WIF Pool/Provider ativos no GCP com audience esperada.
-- `ClusterSecretStore` (`gcp-sm-dev`/`gcp-sm-prd`) existe no cluster, mas ainda sem `Ready=True`.
-- `ExternalSecret postgresql-auth` em `dev-apps` existe com `refreshInterval: 1h`, porem ainda falha sincronizacao.
-- `Secret postgresql-auth` ainda ausente em `dev-apps`.
-
-### Erro de referencia atual
-- Evento recente do store:
-  - `invalid_grant: Error connecting to the given credential's issuer`
-
-### Pendencias para concluir
-1. Publicar issuer OIDC em dominio publico com TLS valido e endpoints acessiveis externamente.
-2. Atualizar `kubernetes_oidc_issuer_uri` no Terraform `shared` e aplicar.
-3. Garantir IAM `roles/secretmanager.secretAccessor` por secret para principals federados `eso-gcp-dev` e `eso-gcp-prd`.
-4. Forcar reconcile do store e do ExternalSecret para validacao imediata.
+## Rotacao da chave da service account
+1. Gerar nova chave no GCP para a service account do ambiente.
+2. Substituir o arquivo local `secrets/<ambiente>/gcp-sa.json`.
+3. Reexecutar `scripts/apply-gcp-sa-key-secret.sh <ambiente>`.
+4. Confirmar `Ready=True` no `ClusterSecretStore` e reconciliar `ExternalSecret` se necessario.

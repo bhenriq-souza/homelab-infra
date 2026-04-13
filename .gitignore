@@ -1,1 +1,7 @@
 **/.terraform/*
+
+# Local sensitive credentials (never commit real keys)
+secrets/*/*
+!secrets/README.md
+!secrets/*/.gitkeep
+!secrets/*/gcp-sa.json.example
