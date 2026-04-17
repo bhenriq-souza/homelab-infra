@@ -12,36 +12,35 @@ Este diretorio contem a infraestrutura como codigo de bootstrap/foundation do la
 - `clusters/homelab/bootstrap`: recursos cluster-wide do cluster atual, incluindo instalacao do Argo CD no namespace `argocd`
 - `clusters/homelab/dev`: namespaces e base do ambiente logico `dev` no cluster `homelab`
 - `clusters/homelab/prd`: namespaces e base do ambiente logico `prd` no cluster `homelab`
-- `clusters/ai-lab/bootstrap`: bootstrap dedicado de Argo CD para o cluster `ai-lab`, com root app proprio apontando para `clusters/ai-lab`
+- `clusters/ai-lab/foundation`: fundacao GCP do `ai-lab` para suportar a futura instalacao do K3s
 
 ## Regras
 - tratar `environments/` apenas como ponte historica durante a limpeza final
 - concentrar logica em `modules/`
 - documentar inputs e outputs
 - nunca versionar segredos reais
-- antes de qualquer `kubectl` ou `terraform`, selecionar explicitamente o perfil correto no shell com `use_homelab` ou `use_ailab`
-- validar o perfil ativo com `kctx_status` antes de operacoes sensiveis
+- para entrypoints Kubernetes do `homelab`, selecionar explicitamente o perfil correto no shell com `use_homelab`
+- para `clusters/ai-lab/foundation`, usar autenticacao Google valida e nao depender de kubeconfig
+- validar o perfil ativo com `kctx_status` antes de operacoes sensiveis no cluster `homelab`
 
 ## Ordem recomendada
 1. aplicar `clusters/homelab/bootstrap`
 2. aplicar `clusters/homelab/dev`
 3. aplicar `clusters/homelab/prd`
 
-Para o `ai-lab`, executar `clusters/ai-lab/bootstrap` separadamente, usando kubeconfig e contexto do cluster alvo.
+Para o `ai-lab`, nesta fase executar apenas `clusters/ai-lab/foundation`. O bootstrap do cluster fica para depois da instalacao futura do K3s.
 
 ## Execucao remota (laptop administrador)
-O bootstrap Terraform pode ser executado no laptop administrador. Nao e necessario abrir SSH no host apenas para rodar `terraform`.
+O Terraform pode ser executado no laptop administrador. Nao e necessario abrir SSH no host apenas para rodar `terraform`.
 
 Pre-condicoes:
-- Terraform, kubectl e helm instalados no laptop
-- conectividade de rede do laptop ate a API do cluster K3s
-- kubeconfig administrativo valido no laptop
-- contexto kubeconfig correto para o cluster alvo
+- Terraform instalado no laptop
+- para `clusters/homelab/*`: kubectl, helm e kubeconfig administrativo validos
+- para `clusters/ai-lab/foundation`: autenticacao Google valida no provider
 
 Pre-condicao obrigatoria de perfil:
 - `use_homelab` para `terraform/clusters/homelab/*`
-- `use_ailab` para `terraform/clusters/ai-lab/bootstrap`
-- `kctx_status` para verificacao explicita antes de `plan` ou `apply`
+- `kctx_status` para verificacao explicita antes de `plan` ou `apply` no `homelab`
 
 Checklist rapido:
 1. `kubectl config current-context --kubeconfig <kubeconfig>`
@@ -74,14 +73,13 @@ KUBE_CONTEXT=default \
 Para evitar erro de provider (`context "default" does not exist`), os ambientes Terraform foram padronizados para usar:
 
 - `kubeconfig_path = "~/.kube/config-homelab.yaml"` nos entrypoints do `homelab`
-- `kubeconfig_path = "~/.kube/config-ai-lab.yaml"` no bootstrap do `ai-lab`
 - `pathexpand(var.kubeconfig_path)` nos providers para resolucao correta de `~`
 
-Isso evita discrepancia entre o kubeconfig ativo no shell e o kubeconfig lido pelo Terraform.
+Isso evita discrepancia entre o kubeconfig ativo no shell e o kubeconfig lido pelo Terraform nos entrypoints que de fato falam com Kubernetes.
 
 Observacao operacional importante:
-- a selecao de perfil via `use_homelab` e `use_ailab` e obrigatoria mesmo quando o arquivo `terraform.tfvars` ja aponta para um kubeconfig especifico
-- isso reduz o risco de validacoes manuais com `kubectl` acontecerem no cluster errado antes ou depois do `terraform`
+- a selecao de perfil via `use_homelab` e obrigatoria mesmo quando o arquivo `terraform.tfvars` ja aponta para um kubeconfig especifico
+- para a fundacao do `ai-lab`, a protecao operacional passa a ser revisar `project_id`, `admin_source_ranges` e a autenticacao Google antes do `plan`
 
 ### Baseline de tuning do Argo CD
 O modulo `modules/argocd-bootstrap` passou a aplicar baseline de estabilidade/performance para homelab:

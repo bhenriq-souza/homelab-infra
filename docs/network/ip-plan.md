@@ -70,14 +70,21 @@
 - Service CIDR local: `10.43.0.0/16`
 - resultado: `sem sobreposicao entre LAN e rede interna do cluster`
 
-## Cloud (GCP - definir depois)
-- VPC CIDR: `<gcp-vpc-cidr-futuro>`
-- subnet principal: `<gcp-subnet-futura>`
-- IPs reservados relevantes: `<reservas-futuras>`
-- status: `pendente; conectividade hibrida sera tratada em fase posterior`
+## Cloud (GCP - fundacao inicial do ai-lab)
+- VPC CIDR inicial sugerido: `10.60.0.0/24`
+- subnet principal inicial: `10.60.0.0/24`
+- IPs reservados relevantes: `1 IP publico estatico para a VM base do ai-lab`
+- status: `fundacao cloud definida; conectividade hibrida e cluster K3s seguem para etapas futuras`
+
+### Validacao de nao conflito da fundacao cloud
+- LAN local: `192.168.15.0/24`
+- Pod CIDR local: `10.42.0.0/16`
+- Service CIDR local: `10.43.0.0/16`
+- Subnet inicial do ai-lab na GCP: `10.60.0.0/24`
+- resultado: `sem sobreposicao entre LAN, cluster local e base cloud do ai-lab`
 
 ## Regras
 - nao permitir sobreposicao entre LAN, cluster local e cloud
 - qualquer alteracao deve ser documentada antes da implementacao
-- ranges de cloud devem ser definidos depois, sem conflito com LAN e cluster local
+- ranges de cloud devem permanecer sem conflito com LAN e cluster local
 - nao promover conectividade hibrida antes da LAN local estar estavel

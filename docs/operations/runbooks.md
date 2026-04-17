@@ -26,7 +26,8 @@ Funcao de verificacao:
 
 ### Politica de uso
 - qualquer operacao no `homelab` deve ser precedida por `use_homelab`
-- qualquer operacao no `ai-lab` deve ser precedida por `use_ailab`
+- qualquer operacao no `ai-lab` baseada em kubeconfig so deve usar `use_ailab` depois que o futuro cluster existir
+- a fundacao GCP do `ai-lab` nao usa kubeconfig nem perfil Kubernetes; ela usa autenticacao Google para o provider Terraform
 - `kctx_status` deve ser usado para confirmar `KUBECONFIG`, `KUBE_CONTEXT`, `kubectl current-context` e `api-server`
 - nao confiar no contexto herdado da sessao anterior
 
@@ -40,10 +41,8 @@ terraform -chdir=terraform/clusters/homelab/bootstrap plan
 ```
 
 ```bash
-use_ailab
-kctx_status
-kubectl get nodes
-terraform -chdir=terraform/clusters/ai-lab/bootstrap plan
+gcloud auth application-default login
+terraform -chdir=terraform/clusters/ai-lab/foundation plan
 ```
 
 ### Criterio operacional
@@ -142,147 +141,84 @@ Regras de segurança obrigatórias:
 Observação operacional:
 - a cópia externa do kubeconfig pode precisar ser atualizada futuramente por rotação/renovação de certificados inline
 
-## Runbook - Criacao do kubeconfig do ai-lab
+## Runbook - Fundacao GCP do ai-lab
 
 ### Objetivo
-Criar um kubeconfig dedicado em `~/.kube/config-ai-lab.yaml` e um contexto chamado `ai-lab` para o novo cluster, sem misturar esse acesso com o kubeconfig do `homelab`.
+Provisionar a base do `ai-lab` na GCP sem instalar o K3s nesta etapa.
 
-### Regra principal
-O contexto do `ai-lab` nao e criado do zero por Terraform nem por GitOps. Ele nasce do proprio provisionamento do cluster.
+### Escopo
+- VPC dedicada
+- subnet principal
+- firewall restritivo para SSH administrativo
+- IP publico estatico
+- VM base
+- disco adicional para dados
+- service account dedicada da VM
 
-Voce sempre precisa de cinco informacoes reais:
-- endpoint da API Kubernetes
-- CA do cluster
-- credencial de autenticacao (certificado, token ou plugin do provedor)
-- nome do contexto
-- conectividade de rede ate a API
-
-Sem isso, nao existe kubeconfig funcional para o `ai-lab`; existe apenas um caminho de arquivo reservado.
-
-### Caminho A - ai-lab em cluster self-managed
-Use este caminho se o `ai-lab` for um K3s ou outro Kubernetes administrado por voce em VM ou host proprio.
-
-Observacao:
-- se o K3s do `ai-lab` estiver rodando no mesmo laptop admin que executa `kubectl` e `terraform`, manter `server: https://127.0.0.1:6443` no kubeconfig e valido
-- nessa situacao, o `ai-lab` nao e um cluster "dentro" de outro cluster; ele e o proprio K3s local reaproveitado como destino do bootstrap
-
-1. Obter o kubeconfig administrativo no host do cluster.
-
-Exemplo para K3s:
+### Pre-check
+1. Validar ferramentas locais.
 
 ```bash
-sudo cat /etc/rancher/k3s/k3s.yaml
+terraform -version
+gcloud version
 ```
 
-2. Copiar o arquivo para o laptop administrador em caminho dedicado.
+2. Autenticar o provider Google.
+
+Opcoes aceitas:
+- `gcloud auth application-default login`
+- `export GOOGLE_APPLICATION_CREDENTIALS=/caminho/da/credencial.json`
+
+3. Revisar os parametros do entrypoint.
 
 ```bash
-mkdir -p ~/.kube
-scp <usuario>@<host-ai-lab>:/etc/rancher/k3s/k3s.yaml ~/.kube/config-ai-lab.yaml
-chmod 700 ~/.kube
-chmod 600 ~/.kube/config-ai-lab.yaml
+sed -n '1,200p' terraform/clusters/ai-lab/foundation/terraform.tfvars
 ```
 
-3. Ajustar o campo `server:` no arquivo copiado.
+Campos que devem ser ajustados antes do primeiro `plan`:
+- `project_id`
+- `admin_source_ranges`
+- `machine_type`, se o sizing padrao nao for o desejado
 
-Regra:
-- substituir `https://127.0.0.1:6443` pelo IP ou DNS realmente acessivel do host do `ai-lab`
-
-4. Renomear o contexto para `ai-lab`.
+### Execucao
+1. Inicializar o entrypoint.
 
 ```bash
-kubectl config rename-context default ai-lab --kubeconfig ~/.kube/config-ai-lab.yaml
+terraform -chdir=terraform/clusters/ai-lab/foundation init -backend=false
 ```
 
-5. Validar o arquivo novo.
+2. Validar a configuracao.
 
 ```bash
-kubectl config get-contexts --kubeconfig ~/.kube/config-ai-lab.yaml
-kubectl config current-context --kubeconfig ~/.kube/config-ai-lab.yaml
-kubectl cluster-info --kubeconfig ~/.kube/config-ai-lab.yaml
-kubectl get nodes --kubeconfig ~/.kube/config-ai-lab.yaml
+terraform -chdir=terraform/clusters/ai-lab/foundation validate
 ```
 
-Resultado esperado:
-- arquivo `~/.kube/config-ai-lab.yaml` existente
-- contexto `ai-lab` visivel no arquivo
-- resposta valida do endpoint da API
-
-### Caminho B - ai-lab em cluster managed
-Use este caminho se o `ai-lab` for criado por um provedor como GKE, EKS ou AKS.
-
-Fluxo:
-1. usar o CLI do provedor para materializar credenciais no kubeconfig
-2. exportar um kubeconfig dedicado apenas para o cluster novo
-3. renomear o contexto exportado para `ai-lab`
-
-Exemplo para GKE:
+3. Gerar o plano.
 
 ```bash
-gcloud container clusters get-credentials <cluster-name> \
-	--region <region> \
-	--project <project-id>
-
-kubectl --context <contexto-gerado-pelo-gke> config view --raw --minify --flatten > ~/.kube/config-ai-lab.yaml
-kubectl config rename-context <contexto-gerado-pelo-gke> ai-lab --kubeconfig ~/.kube/config-ai-lab.yaml
-chmod 600 ~/.kube/config-ai-lab.yaml
+terraform -chdir=terraform/clusters/ai-lab/foundation plan
 ```
 
-Depois validar:
+4. Aplicar somente depois de revisar projeto, CIDR e ranges administrativos.
 
 ```bash
-kubectl config get-contexts --kubeconfig ~/.kube/config-ai-lab.yaml
-kubectl config current-context --kubeconfig ~/.kube/config-ai-lab.yaml
-kubectl cluster-info --kubeconfig ~/.kube/config-ai-lab.yaml
-kubectl get nodes --kubeconfig ~/.kube/config-ai-lab.yaml
+terraform -chdir=terraform/clusters/ai-lab/foundation apply
 ```
 
-### Integracao com Terraform
-Quando o arquivo estiver funcional, o entrypoint do novo cluster pode usar:
+### Validacao minima apos o apply
+- `terraform -chdir=terraform/clusters/ai-lab/foundation output`
+- confirmar nome da VPC e subnet
+- confirmar IP publico estatico da VM
+- confirmar IP interno da VM
+- confirmar disco adicional criado
 
-```tfvars
-kubeconfig_path    = "~/.kube/config-ai-lab.yaml"
-kubeconfig_context = "ai-lab"
-```
+### Fora do escopo deste runbook
+- criar kubeconfig do `ai-lab`
+- instalar K3s
+- bootstrapar Argo CD
+- abrir a porta `6443`
 
-### Checklist minimo antes do primeiro terraform plan
-0. executar `use_ailab`
-1. executar `kctx_status`
-2. `kubectl config current-context --kubeconfig ~/.kube/config-ai-lab.yaml`
-3. `kubectl cluster-info --kubeconfig ~/.kube/config-ai-lab.yaml`
-4. `kubectl get nodes --kubeconfig ~/.kube/config-ai-lab.yaml`
-5. somente entao executar `terraform -chdir=terraform/clusters/ai-lab/bootstrap plan`
-
-### Riscos comuns
-- copiar kubeconfig com `server: https://127.0.0.1:6443`
-- usar um contexto default sem renomear para `ai-lab`
-- apontar `terraform.tfvars` para um arquivo inexistente
-- reutilizar kubeconfig de outro cluster so para "destravar" o Terraform
-
-### Validação final e registro
-10. Validar reboot do host e retorno automático do K3s.
-
-```bash
-sudo reboot
-```
-
-Após reconexão SSH:
-
-```bash
-sudo systemctl status k3s --no-pager
-sudo kubectl get nodes
-```
-
-11. Registrar evidências mínimas:
-- saída de `kubectl get nodes -o wide`
-- saída de `kubectl get pods -n kube-system`
-- confirmação dos CIDRs (`10.42.0.0/16`, `10.43.0.0/16`)
-- confirmação de acesso remoto via kubeconfig no laptop
-
-### Troubleshooting rápido
-- se `k3s` não subir: `sudo journalctl -u k3s -n 200 --no-pager`
-- se `kubectl` remoto falhar: revisar endpoint no kubeconfig e permissões do arquivo
-- se houver erro de certificado remoto: renovar a cópia externa do kubeconfig a partir do host
+Esses passos so devem existir na fase seguinte, depois que a VM base estiver pronta.
 
 ## Runbook - Bootstrap Terraform (shared, dev, prd)
 
@@ -313,7 +249,7 @@ export KUBE_CONTEXT=default
 ```
 
 Observacao:
-- quando as funcoes `use_homelab` e `use_ailab` estiverem disponiveis no shell, elas sao o mecanismo preferencial e obrigatorio para selecao de perfil
+- quando a funcao `use_homelab` estiver disponivel no shell, ela e o mecanismo preferencial e obrigatorio para selecao de perfil
 - os `export` acima servem como referencia de diagnostico e compatibilidade
 
 3. Validar contexto e conectividade com a API do cluster.

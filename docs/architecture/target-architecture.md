@@ -20,8 +20,10 @@ O laboratório será composto por:
 
 ### Cloud
 - VPC dedicada
-- VM spot inicial
+- VM base parametrizavel com IP publico restritivo
+- disco dedicado para dados do futuro cluster
 - infraestrutura de apoio para testes híbridos e burst controlado
+- instalacao do K3s em etapa posterior sobre essa base
 
 ### Repositórios separados
 - `homelab-infra`
