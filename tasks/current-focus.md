@@ -79,3 +79,14 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 
 ## Proximo marco apos a phase-05
 Consolidar logs centralizados e avancar para baseline de PostgreSQL no ambiente `dev`, mantendo rollout incremental e baixo consumo de recursos.
+
+## Proxima fase planejada - Phase 07: CI/CD Pipeline
+Discovery concluido e decisoes consolidadas em ADR-0006. Blocos de implementacao definidos:
+1. Artifact Registry (Terraform) - registry unico `homelab-apps`
+2. GitHub OIDC -> GCP WIF (Terraform) - autenticacao sem chave estatica
+3. Image Pull Secret (Terraform + GitOps) - SA key via Secret Manager + ESO
+4. Reusable Workflow (homelab-gitops) - centralizado para multiplos app repos
+5. Caller Workflow (app repos) - workflow minimo por app
+6. Validacao end-to-end - develop->dev, main->prd
+
+Referencia: `docs/backlog/phase-07-cicd-pipeline.md` e `docs/adr/ADR-0006-cicd-with-github-actions-and-artifact-registry.md`

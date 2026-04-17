@@ -32,3 +32,36 @@ module "gcp_eso_wif" {
   manage_project_services             = var.gcp_manage_project_services
   manage_secret_iam_bindings          = var.gcp_manage_secret_iam_bindings
 }
+
+module "artifact_registry" {
+  source = "../../../modules/artifact-registry"
+
+  create                             = var.artifact_registry_enabled
+  project_id                         = var.gcp_project_id
+  location                           = var.gcp_region
+  repository_id                      = var.artifact_registry_repository_id
+  create_reader_service_account      = var.artifact_registry_create_reader_sa
+  reader_service_account_id          = var.artifact_registry_reader_sa_id
+  create_reader_sa_key               = var.artifact_registry_create_reader_sa
+  store_reader_key_in_secret_manager = var.artifact_registry_create_reader_sa
+  reader_key_secret_id               = var.artifact_registry_reader_key_secret_id
+  manage_project_services            = var.gcp_manage_project_services
+}
+
+module "gcp_github_wif" {
+  source = "../../../modules/gcp-github-wif"
+
+  create                       = var.github_wif_enabled
+  project_id                   = var.gcp_project_id
+  project_number               = var.gcp_project_number
+  wif_pool_id                  = var.github_wif_pool_id
+  wif_provider_id              = var.github_wif_provider_id
+  github_organization          = var.github_organization
+  allowed_repositories         = var.github_allowed_repositories
+  dev_branches                 = var.github_dev_branches
+  prd_branches                 = var.github_prd_branches
+  ci_service_account_id        = var.github_ci_service_account_id
+  artifact_registry_repository = var.artifact_registry_enabled ? module.artifact_registry.repository_id : ""
+  artifact_registry_location   = var.gcp_region
+  manage_project_services      = var.gcp_manage_project_services
+}

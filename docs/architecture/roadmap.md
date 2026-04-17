@@ -35,12 +35,17 @@
 - implantar Grafana Alloy para coleta de logs
 - habilitar consulta de logs no Grafana
 
-## Fase 7 - Entrega e automação
-- preparar CI de infraestrutura
-- integrar com demais repositórios
+## Fase 7 - CI/CD Pipeline
+- provisionar Artifact Registry no GCP (modulo Terraform)
+- configurar GitHub OIDC -> GCP WIF para GitHub Actions
+- criar image pull secrets via ESO nos namespaces dev-apps e prd-apps
+- implementar reusable workflow em homelab-gitops
+- validar fluxo end-to-end: push -> build -> deploy via Argo CD
+- segregacao de branch: develop -> dev, main -> prd
 
-## Fase 8 - Integração com o app
+## Fase 8 - Integracao com o app
 - preparar contratos de infra para frontend/backend
+- definir naming esperado de artefatos
 - definir dependências operacionais do app
 - estabelecer baseline de banco de dados PostgreSQL no cluster (dev -> prd)
 - validar estratégia de backup/restore do banco antes da promoção para produção

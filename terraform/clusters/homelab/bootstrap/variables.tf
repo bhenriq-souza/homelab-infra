@@ -177,3 +177,85 @@ variable "gcp_manage_secret_iam_bindings" {
   type        = bool
   default     = true
 }
+
+# --- Artifact Registry ---
+
+variable "artifact_registry_enabled" {
+  description = "Habilita criacao do Artifact Registry para imagens Docker."
+  type        = bool
+  default     = false
+}
+
+variable "artifact_registry_repository_id" {
+  description = "ID do repositorio no Artifact Registry."
+  type        = string
+  default     = "homelab-apps"
+}
+
+variable "artifact_registry_create_reader_sa" {
+  description = "Cria SA de leitura e armazena a chave no Secret Manager para image pull."
+  type        = bool
+  default     = true
+}
+
+variable "artifact_registry_reader_sa_id" {
+  description = "Account ID da SA de leitura do registry."
+  type        = string
+  default     = "ar-reader"
+}
+
+variable "artifact_registry_reader_key_secret_id" {
+  description = "Secret ID no Secret Manager para a chave da SA de leitura."
+  type        = string
+  default     = "homelab-ar-reader-sa-key"
+}
+
+# --- GitHub Actions WIF ---
+
+variable "github_wif_enabled" {
+  description = "Habilita WIF para GitHub Actions."
+  type        = bool
+  default     = false
+}
+
+variable "github_wif_pool_id" {
+  description = "ID do Workload Identity Pool para GitHub Actions."
+  type        = string
+  default     = "github-actions-pool"
+}
+
+variable "github_wif_provider_id" {
+  description = "ID do Workload Identity Provider OIDC para GitHub Actions."
+  type        = string
+  default     = "github-actions-provider"
+}
+
+variable "github_organization" {
+  description = "Owner/organization do GitHub."
+  type        = string
+  default     = "bhenriq-souza"
+}
+
+variable "github_allowed_repositories" {
+  description = "Lista de repositorios GitHub autorizados para CI (formato: owner/repo)."
+  type        = list(string)
+  default     = []
+}
+
+variable "github_dev_branches" {
+  description = "Branches que representam o ambiente dev."
+  type        = list(string)
+  default     = ["develop"]
+}
+
+variable "github_prd_branches" {
+  description = "Branches que representam o ambiente prd."
+  type        = list(string)
+  default     = ["main"]
+}
+
+variable "github_ci_service_account_id" {
+  description = "Account ID da SA GCP usada pelo GitHub Actions CI."
+  type        = string
+  default     = "github-actions-ci"
+}
