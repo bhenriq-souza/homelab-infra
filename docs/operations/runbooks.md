@@ -9,6 +9,45 @@ Centralizar procedimentos operacionais repetíveis.
 - preparar plano de mudança
 - restaurar configuração
 
+## Regra operacional - Perfis de shell para Kubernetes e Terraform
+
+### Objetivo
+Evitar execucao de `kubectl` e `terraform` contra o cluster errado por causa de contexto residual no shell.
+
+### Regra obrigatoria
+Antes de qualquer operacao contra cluster, executar explicitamente a funcao de perfil correspondente.
+
+Perfis disponiveis no shell:
+- `use_homelab`
+- `use_ailab`
+
+Funcao de verificacao:
+- `kctx_status`
+
+### Politica de uso
+- qualquer operacao no `homelab` deve ser precedida por `use_homelab`
+- qualquer operacao no `ai-lab` baseada em kubeconfig so deve usar `use_ailab` depois que o futuro cluster existir
+- a fundacao GCP do `ai-lab` nao usa kubeconfig nem perfil Kubernetes; ela usa autenticacao Google para o provider Terraform
+- `kctx_status` deve ser usado para confirmar `KUBECONFIG`, `KUBE_CONTEXT`, `kubectl current-context` e `api-server`
+- nao confiar no contexto herdado da sessao anterior
+
+### Exemplos
+
+```bash
+use_homelab
+kctx_status
+kubectl get nodes
+terraform -chdir=terraform/clusters/homelab/bootstrap plan
+```
+
+```bash
+gcloud auth application-default login
+terraform -chdir=terraform/clusters/ai-lab/foundation plan
+```
+
+### Criterio operacional
+Se a troca de perfil nao for feita explicitamente antes do comando, a operacao deve ser considerada invalida.
+
 ## Runbook - Bootstrap inicial K3s single-node
 
 ### Objetivo
@@ -102,30 +141,84 @@ Regras de segurança obrigatórias:
 Observação operacional:
 - a cópia externa do kubeconfig pode precisar ser atualizada futuramente por rotação/renovação de certificados inline
 
-### Validação final e registro
-10. Validar reboot do host e retorno automático do K3s.
+## Runbook - Fundacao GCP do ai-lab
+
+### Objetivo
+Provisionar a base do `ai-lab` na GCP sem instalar o K3s nesta etapa.
+
+### Escopo
+- VPC dedicada
+- subnet principal
+- firewall restritivo para SSH administrativo
+- IP publico estatico
+- VM base
+- disco adicional para dados
+- service account dedicada da VM
+
+### Pre-check
+1. Validar ferramentas locais.
 
 ```bash
-sudo reboot
+terraform -version
+gcloud version
 ```
 
-Após reconexão SSH:
+2. Autenticar o provider Google.
+
+Opcoes aceitas:
+- `gcloud auth application-default login`
+- `export GOOGLE_APPLICATION_CREDENTIALS=/caminho/da/credencial.json`
+
+3. Revisar os parametros do entrypoint.
 
 ```bash
-sudo systemctl status k3s --no-pager
-sudo kubectl get nodes
+sed -n '1,200p' terraform/clusters/ai-lab/foundation/terraform.tfvars
 ```
 
-11. Registrar evidências mínimas:
-- saída de `kubectl get nodes -o wide`
-- saída de `kubectl get pods -n kube-system`
-- confirmação dos CIDRs (`10.42.0.0/16`, `10.43.0.0/16`)
-- confirmação de acesso remoto via kubeconfig no laptop
+Campos que devem ser ajustados antes do primeiro `plan`:
+- `project_id`
+- `admin_source_ranges`
+- `machine_type`, se o sizing padrao nao for o desejado
 
-### Troubleshooting rápido
-- se `k3s` não subir: `sudo journalctl -u k3s -n 200 --no-pager`
-- se `kubectl` remoto falhar: revisar endpoint no kubeconfig e permissões do arquivo
-- se houver erro de certificado remoto: renovar a cópia externa do kubeconfig a partir do host
+### Execucao
+1. Inicializar o entrypoint.
+
+```bash
+terraform -chdir=terraform/clusters/ai-lab/foundation init -backend=false
+```
+
+2. Validar a configuracao.
+
+```bash
+terraform -chdir=terraform/clusters/ai-lab/foundation validate
+```
+
+3. Gerar o plano.
+
+```bash
+terraform -chdir=terraform/clusters/ai-lab/foundation plan
+```
+
+4. Aplicar somente depois de revisar projeto, CIDR e ranges administrativos.
+
+```bash
+terraform -chdir=terraform/clusters/ai-lab/foundation apply
+```
+
+### Validacao minima apos o apply
+- `terraform -chdir=terraform/clusters/ai-lab/foundation output`
+- confirmar nome da VPC e subnet
+- confirmar IP publico estatico da VM
+- confirmar IP interno da VM
+- confirmar disco adicional criado
+
+### Fora do escopo deste runbook
+- criar kubeconfig do `ai-lab`
+- instalar K3s
+- bootstrapar Argo CD
+- abrir a porta `6443`
+
+Esses passos so devem existir na fase seguinte, depois que a VM base estiver pronta.
 
 ## Runbook - Bootstrap Terraform (shared, dev, prd)
 
@@ -149,9 +242,15 @@ helm version
 2. Definir kubeconfig e contexto alvo para a sessao atual.
 
 ```bash
+use_homelab
+kctx_status
 export KUBECONFIG=/home/<usuario>/.kube/config-homelab.yaml
 export KUBE_CONTEXT=default
 ```
+
+Observacao:
+- quando a funcao `use_homelab` estiver disponivel no shell, ela e o mecanismo preferencial e obrigatorio para selecao de perfil
+- os `export` acima servem como referencia de diagnostico e compatibilidade
 
 3. Validar contexto e conectividade com a API do cluster.
 
@@ -182,9 +281,9 @@ Comportamento esperado:
 5. Validar estado Terraform por ambiente.
 
 ```bash
-terraform -chdir=terraform/environments/shared output
-terraform -chdir=terraform/environments/dev output
-terraform -chdir=terraform/environments/prd output
+terraform -chdir=terraform/clusters/homelab/bootstrap output
+terraform -chdir=terraform/clusters/homelab/dev output
+terraform -chdir=terraform/clusters/homelab/prd output
 ```
 
 6. Validar recursos no cluster.
@@ -212,12 +311,12 @@ registry.terraform.io does not have a provider named registry.terraform.io/hashi
 Validacao:
 
 ```bash
-terraform -chdir=terraform/environments/shared providers
+terraform -chdir=terraform/clusters/homelab/bootstrap providers
 ```
 
 Acao:
 - confirmar source `gavinbunney/kubectl` no modulo `terraform/modules/argocd-bootstrap/versions.tf`
-- reexecutar `terraform -chdir=terraform/environments/shared init -upgrade`
+- reexecutar `terraform -chdir=terraform/clusters/homelab/bootstrap init -upgrade`
 
 #### Erro de contexto Kubernetes inexistente
 Sintoma:
@@ -243,6 +342,35 @@ Acao:
 - saida de `kubectl get nodes`
 - saida de `kubectl -n argocd get pods`
 - saida de `kubectl -n argocd get applications.argoproj.io`
+
+## Registro operacional - Estabilizacao do Argo CD (2026-03-24)
+
+### Contexto
+- Sintoma observado: lentidao no sync e reinicios intermitentes em componentes do Argo CD.
+- Sintoma adicional: falha de `terraform plan` com erro de contexto Kubernetes inexistente.
+
+### O que foi feito
+1. Aplicado tuning baseline do Argo CD no bootstrap Terraform (`shared`):
+	- requests/limits para `controller`, `repoServer`, `server`, `applicationSet` e `redis`
+	- reconciliacao configurada com `timeout.reconciliation=300s` e `timeout.reconciliation.jitter=60s`
+	- desabilitado `notifications` e `dex` por padrao
+	- habilitado override por ambiente via `argocd_helm_values_override`
+2. Corrigido uso de kubeconfig nos providers Terraform:
+	- troca para `pathexpand(var.kubeconfig_path)` em `shared`, `dev` e `prd`
+	- padronizado `kubeconfig_path = "~/.kube/config-homelab.yaml"` nos `terraform.tfvars`
+
+### Resultado esperado apos apply
+- `terraform plan` e `terraform apply` sem erro de contexto de provider Kubernetes
+- Argo CD mais estavel em reconciliacoes, com menor chance de `CrashLoopBackOff` por pressao de recursos
+
+### Validacao recomendada
+```bash
+terraform -chdir=terraform/clusters/homelab/bootstrap plan
+terraform -chdir=terraform/clusters/homelab/bootstrap apply
+kubectl -n argocd get pods
+kubectl -n argocd get events --sort-by=.lastTimestamp | tail -n 30
+kubectl -n argocd logs deploy/argocd-application-controller --tail=200
+```
 
 ## Runbook - Validacao de app de teste e logs
 
@@ -290,6 +418,50 @@ Resultado esperado:
 kubectl -n dev-apps logs deploy/myapp --tail=100
 ```
 
+## Runbook - Validacao inicial do PostgreSQL em dev
+
+### Objetivo
+Validar rapidamente a instalacao do PostgreSQL no namespace `dev-apps`, incluindo estado do StatefulSet, volume persistente e teste basico de conexao.
+
+### Pre-check
+1. Confirmar app `dev-workloads` em `Synced` e `Healthy` no Argo CD.
+2. Confirmar recursos de banco criados no namespace.
+
+```bash
+kubectl -n dev-apps get statefulset,pod,svc,pvc | grep postgresql
+```
+
+Resultado esperado:
+- StatefulSet `postgresql` com `READY 1/1`
+- pod em `Running`
+- PVC `Bound`
+- service `postgresql` como `ClusterIP`
+
+### Teste de conectividade basica
+3. Executar teste de readiness via `pg_isready` no proprio pod.
+
+```bash
+kubectl -n dev-apps exec statefulset/postgresql -- sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+Resultado esperado:
+- retorno `accepting connections`
+
+4. Testar comando SQL simples.
+
+```bash
+kubectl -n dev-apps exec statefulset/postgresql -- sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 1;"'
+```
+
+Resultado esperado:
+- query concluida com sucesso
+
+### Pos-validacao
+5. Registrar evidencias minimas:
+- saida de `get statefulset,pod,svc,pvc`
+- saida do `pg_isready`
+- saida do `SELECT 1`
+
 Resultado esperado:
 - entradas de log das requisicoes `GET /get`
 - entradas de log das requisicoes `GET /status/500`
@@ -299,5 +471,160 @@ Resultado esperado:
 - app responde `500` no endpoint de erro controlado
 - logs mostram as requisicoes realizadas no ambiente `dev`
 
+## Runbook - Validacao do pipeline Loki + Alloy
+
+### Objetivo
+Validar ponta a ponta a trilha de logs centralizados no cluster (`Alloy -> Loki -> Grafana`).
+
+### Pre-check
+1. Confirmar recursos em `observability` saudaveis.
+
+```bash
+kubectl -n observability get pods
+kubectl -n observability get svc
+kubectl -n observability get pvc
+```
+
+2. Confirmar estado do coletor Alloy.
+
+```bash
+kubectl -n observability get ds alloy-logs
+kubectl -n observability logs ds/alloy-logs --tail=100
+```
+
+Critério para seguir:
+- pod do Loki em estado `Running`
+- DaemonSet do Alloy com `NUMBER_READY` igual a `DESIRED`
+- sem erro recorrente de push para Loki nos logs do Alloy
+
+### Gerar eventos de log no dev
+3. Port-forward e chamadas de sucesso/erro no app de teste.
+
+```bash
+kubectl -n dev-apps port-forward svc/myapp 18080:80
+curl -i http://127.0.0.1:18080/get
+curl -i http://127.0.0.1:18080/status/500
+```
+
+### Validar consulta no Grafana Explore
+4. Abrir Explore no Grafana e selecionar datasource `Loki`.
+5. Executar consultas basicas:
+
+```logql
+{namespace="dev-apps", app="myapp"}
+```
+
+```logql
+{namespace="dev-apps", pod=~"myapp-.*"}
+```
+
+6. Confirmar labels operacionais no resultado (`cluster`, `namespace`, `pod`, `container`, `app`, `environment`).
+
+### Criterios de aceite operacionais
+- logs do app em `dev` aparecem no Explore
+- filtros por `namespace`, `app` e `pod` retornam eventos coerentes
+- fluxo de ingestao ocorre com latencia aceitavel para o uso no homelab
+
 ### Evolucao posterior
 - promover o mesmo app de teste para `prd` apenas quando a fase de validacao em `dev` estiver concluida
+
+## Runbook - Acesso diario ao Argo CD via Ingress/TLS
+
+### Objetivo
+Substituir o uso recorrente de `port-forward` por acesso estavel via hostname interno com TLS.
+
+### Premissas
+- Traefik ativo no cluster
+- DNS interno resolvendo o hostname do Argo CD para o endpoint de entrada do cluster
+- cert-manager opcional (quando usado, informar `ClusterIssuer` no `terraform.tfvars` do `shared`)
+
+### Configuracao Terraform (shared)
+1. Confirmar no arquivo `terraform/clusters/homelab/bootstrap/terraform.tfvars`:
+	- `argocd_ingress_enabled = true`
+	- `argocd_ingress_hostname = "argocd.homelab.local"`
+	- `argocd_ingress_class_name = "traefik"`
+	- `argocd_ingress_tls_enabled = true`
+	- `argocd_ingress_tls_secret_name = "argocd-server-tls"`
+2. (Opcional) Configurar emissao automatica de certificado:
+	- `argocd_ingress_cert_manager_cluster_issuer = "<cluster-issuer>"`
+
+### Aplicacao
+```bash
+terraform -chdir=terraform/clusters/homelab/bootstrap plan
+terraform -chdir=terraform/clusters/homelab/bootstrap apply
+```
+
+### Validacao
+```bash
+kubectl -n argocd get ingress
+kubectl -n argocd describe ingress argocd-server
+kubectl -n argocd get svc argocd-server
+```
+
+Validacao no laptop admin:
+```bash
+nslookup argocd.homelab.local
+curl -vk https://argocd.homelab.local
+```
+
+### Criterios de sucesso
+- UI acessivel por `https://argocd.homelab.local`
+- login e navegacao sem reconexoes frequentes de sessao
+- operacao diaria sem dependencia de `kubectl port-forward`
+
+## Runbook - Retomada do fluxo GCP Secret Manager + ESO + WIF
+
+### Objetivo
+Retomar a configuracao de secrets federados quando o ambiente estiver parcialmente aplicado (WIF criado, mas stores/externalsecrets ainda sem `Ready`).
+
+### Sinais do problema
+- `ClusterSecretStore` com `Ready=False`.
+- Evento recorrente com `invalid_grant` e mensagem sobre issuer.
+- `ExternalSecret` com `SecretSyncedError`.
+- `Secret` alvo nao criado no namespace da aplicacao.
+
+### Pre-check
+1. Validar WIF no GCP:
+
+```bash
+gcloud iam workload-identity-pools list --location=global --project=homelab-492918
+gcloud iam workload-identity-pools providers list --location=global --workload-identity-pool=homelab-k3s-pool --project=homelab-492918
+```
+
+2. Validar issuer publico (rede externa):
+
+```bash
+curl -fsSL https://<issuer>/.well-known/openid-configuration
+curl -fsSL https://<issuer>/openid/v1/jwks
+```
+
+Critério para seguir:
+- pool e provider em `ACTIVE`
+- discovery e JWKS acessiveis por HTTPS com certificado valido
+
+### Correcao e aplicacao
+3. Atualizar issuer no Terraform `shared` (`kubernetes_oidc_issuer_uri`).
+4. Aplicar Terraform no ambiente `shared`.
+5. Garantir IAM por secret para principals federados (`roles/secretmanager.secretAccessor`).
+
+### Reconcile e validacao final
+6. Forcar reconcile do store e do ExternalSecret:
+
+```bash
+kubectl annotate clustersecretstore gcp-sm-dev force-sync=$(date +%s) --overwrite
+kubectl annotate clustersecretstore gcp-sm-prd force-sync=$(date +%s) --overwrite
+kubectl annotate externalsecret postgresql-auth -n dev-apps force-sync=$(date +%s) --overwrite
+```
+
+7. Validar estado:
+
+```bash
+kubectl get clustersecretstore gcp-sm-dev gcp-sm-prd
+kubectl get externalsecret postgresql-auth -n dev-apps
+kubectl get secret postgresql-auth -n dev-apps
+```
+
+### Criterios de sucesso
+- `ClusterSecretStore` com `Ready=True`
+- `ExternalSecret` com `Ready=True`
+- `Secret postgresql-auth` materializado no namespace `dev-apps`

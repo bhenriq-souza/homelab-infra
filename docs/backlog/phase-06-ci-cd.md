@@ -1,13 +1,9 @@
-# Phase 06 - CI/CD
+# Phase 06 - CI/CD (superseded -> renumerado)
 
-## Objetivo
-Preparar automações básicas do repositório de infraestrutura.
+Este documento foi reposicionado apos a inclusao da fase de logs centralizados.
+O CI/CD agora e tratado como parte da entrega e automacao, documentado em:
+- `docs/backlog/phase-07-cicd-pipeline.md`
+- `docs/adr/ADR-0006-cicd-with-github-actions-and-artifact-registry.md`
 
-## Macrotarefas
-- validar Terraform em CI
-- validar markdown em CI
-- definir regras mínimas de revisão
-
-## Critérios de aceite
-- workflows iniciais criados
-- validação básica do repositório funcionando
+A fase de logs centralizados permanece em:
+- `docs/backlog/phase-06-logs-centralizados.md`

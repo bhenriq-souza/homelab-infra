@@ -16,6 +16,7 @@
 │   │   └── TASK_TEMPLATE.md
 │   ├── architecture
 │   │   ├── environments.md
+│   │   ├── gitops-multi-cluster-structure.md
 │   │   ├── naming-conventions.md
 │   │   ├── non-functional-requirements.md
 │   │   ├── roadmap.md
@@ -28,10 +29,13 @@
 │   │   ├── phase-02-network.md
 │   │   ├── phase-03-k3s.md
 │   │   ├── phase-04-observability.md
+│   │   ├── phase-05-observability.md
 │   │   ├── phase-05-terraform.md
 │   │   ├── phase-06-ci-cd.md
+│   │   ├── phase-06-logs-centralizados.md
 │   │   ├── phase-07-finance-app-integration.md
-│   │   └── phase-08-hybrid-fleet.md
+│   │   ├── phase-08-hybrid-fleet.md
+│   │   └── phase-08-postgresql-on-cluster.md
 │   ├── network
 │   │   ├── dns-and-tls.md
 │   │   ├── exposure-matrix.md
@@ -46,15 +50,85 @@
 │   │   └── troubleshooting.md
 │   └── security
 │       ├── access-model.md
+│       ├── gcp-eso-wif-secrets.md
 │       ├── secrets-strategy.md
 │       ├── security-baseline.md
 │       └── supply-chain-notes.md
 ├── file_structure.txt
+├── scripts
+│   └── apply-gcp-sa-key-secret.sh
+├── secrets
+│   ├── README.md
+│   ├── dev
+│   │   ├── gcp-sa.json
+│   │   └── gcp-sa.json.example
+│   └── prd
+│       ├── gcp-sa.json
+│       └── gcp-sa.json.example
 ├── tasks
 │   ├── README.md
 │   ├── current-focus.md
 │   └── inbox.md
 └── terraform
-    └── README.md
+    ├── README.md
+    ├── clusters
+    │   ├── ai-lab
+    │   │   └── bootstrap
+    │   │       ├── main.tf
+    │   │       ├── outputs.tf
+    │   │       ├── providers.tf
+    │   │       ├── terraform.tfstate
+    │   │       ├── terraform.tfvars
+    │   │       ├── variables.tf
+    │   │       └── versions.tf
+    │   └── homelab
+    │       ├── bootstrap
+    │       │   ├── main.tf
+    │       │   ├── outputs.tf
+    │       │   ├── providers.tf
+    │       │   ├── terraform.tfstate
+    │       │   ├── terraform.tfstate.backup
+    │       │   ├── terraform.tfvars
+    │       │   ├── tfplan
+    │       │   ├── variables.tf
+    │       │   └── versions.tf
+    │       ├── dev
+    │       │   ├── main.tf
+    │       │   ├── outputs.tf
+    │       │   ├── providers.tf
+    │       │   ├── terraform.tfstate
+    │       │   ├── terraform.tfstate.backup
+    │       │   ├── terraform.tfvars
+    │       │   ├── variables.tf
+    │       │   └── versions.tf
+    │       └── prd
+    │           ├── main.tf
+    │           ├── outputs.tf
+    │           ├── providers.tf
+    │           ├── terraform.tfstate
+    │           ├── terraform.tfstate.backup
+    │           ├── terraform.tfvars
+    │           ├── variables.tf
+    │           └── versions.tf
+    ├── modules
+    │   ├── argocd-bootstrap
+    │   │   ├── main.tf
+    │   │   ├── outputs.tf
+    │   │   ├── variables.tf
+    │   │   └── versions.tf
+    │   ├── environment-namespaces
+    │   │   ├── main.tf
+    │   │   ├── outputs.tf
+    │   │   └── variables.tf
+    │   └── gcp-eso-wif
+    │       ├── main.tf
+    │       ├── outputs.tf
+    │       ├── variables.tf
+    │       └── versions.tf
+    ├── policies
+    │   └── README.md
+    └── scripts
+        ├── README.md
+        └── bootstrap-order.sh
 
-11 directories, 47 files
+28 directories, 104 files

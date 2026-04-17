@@ -115,7 +115,7 @@ Para o momento atual do homelab, `kube-prometheus-stack` enxuto oferece melhor r
 - namespace `observability` criado via `CreateNamespace=true`
 
 ### Diretriz de organizacao
-- tudo que for observabilidade base da plataforma permanece em `gitops/apps/shared/platform`
+- tudo que for observabilidade base da plataforma permanece em `homelab-gitops/clusters/homelab/platform`
 - customizacoes de workloads continuam nos caminhos de `dev` e `prd`
 
 ## Estrutura sugerida de diretorios e arquivos
@@ -123,13 +123,9 @@ Para o momento atual do homelab, `kube-prometheus-stack` enxuto oferece melhor r
 Estrutura-alvo desta fase:
 
 ```text
-gitops/
-  bootstrap/
-    root/
-      applications/
-        shared-platform.yaml
-  apps/
-    shared/
+homelab-gitops/
+  clusters/
+    homelab/
       platform/
         kustomization.yaml
         manifests/
@@ -182,6 +178,30 @@ Observacao:
 - visibilidade de namespaces `dev` e `prd` no mesmo cluster
 - visualizacao de restarts/falhas basicas de pods
 - documentacao da fase criada e atualizada
+
+## Status de execucao (2026-03-23)
+
+### Concluido
+- aplicacao `shared-observability` sincronizada no Argo CD
+- stack minima de metricas operacional (Prometheus + Grafana + exporters)
+- dashboards de node/namespace/pod validados no Grafana
+- metricas de restart/falha basica confirmadas
+- app de teste em `dev` validado com endpoints de sucesso e erro
+- logs de aplicacao confirmados no cluster (stdout/stderr)
+
+### Em aberto
+- visualizacao de logs de aplicacao no Grafana
+
+### Decisao de rollout
+- manter workload de teste apenas em `dev`
+- adiar promocao para `prd` ate consolidar pipeline de logs
+
+### Pendencias para trilha de logs
+- implantar Loki (backend de logs) no escopo compartilhado
+- implantar Grafana Alloy como agente coletor
+- configurar labels e pipeline de envio Alloy -> Loki
+- validar consultas no Grafana Explore por `namespace` e `app`
+- definir retencao de logs adequada ao limite de disco do homelab
 
 ## Riscos e cuidados
 - risco de consumo excessivo de CPU/memoria no single-node

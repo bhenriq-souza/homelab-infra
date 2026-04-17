@@ -20,14 +20,20 @@ O laboratório será composto por:
 
 ### Cloud
 - VPC dedicada
-- VM spot inicial
+- VM base parametrizavel com IP publico restritivo
+- disco dedicado para dados do futuro cluster
 - infraestrutura de apoio para testes híbridos e burst controlado
+- instalacao do K3s em etapa posterior sobre essa base
 
 ### Repositórios separados
 - `homelab-infra`
 - `homelab-gitops`
 - `finances-app-frontend`
 - `finances-app-backend`
+
+Status atual:
+- `homelab-infra`: documentacao, backlog, Terraform e contexto operacional
+- `homelab-gitops`: fonte ativa de verdade do Argo CD para o cluster atual
 
 ## Objetivos técnicos
 - manter simplicidade operacional

@@ -30,14 +30,30 @@
 - cobrir saude do node, cluster, pods e namespaces
 - manter configuracao enxuta para K3s single-node
 
-## Fase 6 - Entrega e automação
-- preparar CI de infraestrutura
-- integrar com demais repositórios
+## Fase 6 - Logs centralizados
+- implantar Loki para backend de logs
+- implantar Grafana Alloy para coleta de logs
+- habilitar consulta de logs no Grafana
 
-## Fase 7 - Integração com o app
+## Fase 7 - CI/CD Pipeline
+- provisionar Artifact Registry no GCP (modulo Terraform)
+- configurar GitHub OIDC -> GCP WIF para GitHub Actions
+- criar image pull secrets via ESO nos namespaces dev-apps e prd-apps
+- implementar reusable workflow em homelab-gitops
+- validar fluxo end-to-end: push -> build -> deploy via Argo CD
+- segregacao de branch: develop -> dev, main -> prd
+
+## Fase 8 - Integracao com o app
 - preparar contratos de infra para frontend/backend
+- definir naming esperado de artefatos
 - definir dependências operacionais do app
+- estabelecer baseline de banco de dados PostgreSQL no cluster (dev -> prd)
+- validar estratégia de backup/restore do banco antes da promoção para produção
 
-## Fase 8 - Híbrido e fleet
+## Fase 9 - Híbrido e fleet
+- provisionar a fundacao base do `ai-lab` na GCP
+- manter o bootstrap do cluster `ai-lab` para etapa posterior, apos a base cloud existir
 - consolidar conectividade on-prem + cloud
 - preparar base para gestão multi-cluster
+- definir estrutura GitOps cluster-first para novos clusters
+- padronizar bootstrap do Argo CD por cluster
