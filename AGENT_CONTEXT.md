@@ -26,6 +26,9 @@ Este repositório centraliza a arquitetura macro, rede, segurança base, operaç
 - Terraform como IaC principal
 - GitHub Actions para automação
 - Argo CD como motor de GitOps em repositório separado
+- Artifact Registry no GCP como registry de imagens privadas (ADR-0006)
+- CI/CD via GitHub Actions com OIDC/WIF para GCP, reusable workflow centralizado no homelab-gitops
+- image pull secrets gerenciados via ESO + GCP Secret Manager
 
 ## Regras para agentes
 - respeitar as ADRs existentes
@@ -42,7 +45,8 @@ Leia nesta ordem:
 3. `docs/architecture/roadmap.md`
 4. `docs/architecture/naming-conventions.md`
 5. `docs/adr/README.md`
-6. `tasks/current-focus.md`
+6. `docs/adr/ADR-0006-cicd-with-github-actions-and-artifact-registry.md`
+7. `tasks/current-focus.md`
 
 ## Resultado esperado em cada tarefa
 - alteração objetiva

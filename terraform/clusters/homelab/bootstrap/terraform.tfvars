@@ -28,12 +28,12 @@ kubeconfig_context = "homelab"
 
 # GCP Secret Manager + ESO + Workload Identity Federation
 # Habilite apenas quando o issuer OIDC do K3s estiver acessivel externamente.
-gcp_eso_wif_enabled            = true
-gcp_project_id                 = "homelab-492918"
-gcp_project_number             = "702302784311"
-gcp_region                     = "us-central1"
-gcp_wif_pool_id                = "homelab-k3s-pool"
-gcp_wif_provider_id            = "homelab-k3s-provider"
+gcp_eso_wif_enabled = true
+gcp_project_id      = "homelab-492918"
+gcp_project_number  = "702302784311"
+gcp_region          = "us-central1"
+gcp_wif_pool_id     = "homelab-k3s-pool"
+gcp_wif_provider_id = "homelab-k3s-provider"
 # Precisa ser um issuer OIDC publico e acessivel pela Google STS.
 kubernetes_oidc_issuer_uri     = "https://oidc.homelab.local"
 gcp_manage_project_services    = false
@@ -46,3 +46,22 @@ gcp_allowed_secret_ids = [
   "homelab-prd-postgres-password",
   "homelab-prd-postgres-url"
 ]
+
+# Artifact Registry
+artifact_registry_enabled              = true
+artifact_registry_repository_id        = "homelab-apps"
+artifact_registry_create_reader_sa     = true
+artifact_registry_reader_sa_id         = "ar-reader"
+artifact_registry_reader_key_secret_id = "homelab-ar-reader-sa-key"
+
+# GitHub Actions WIF
+github_wif_enabled     = true
+github_wif_pool_id     = "github-actions-pool"
+github_wif_provider_id = "github-actions-provider"
+github_organization    = "bhenriq-souza"
+github_allowed_repositories = [
+  "bhenriq-souza/homelab-gitops"
+]
+github_dev_branches          = ["develop"]
+github_prd_branches          = ["main"]
+github_ci_service_account_id = "github-actions-ci"
