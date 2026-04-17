@@ -146,73 +146,109 @@ kubectl -n argocd logs deploy/argocd-application-controller --tail=200 -f
 - tempo de sync reduzido/estavel para apps do bootstrap
 - ausencia de novos eventos de `OOMKilled`
 
-## Argo CD no ai-lab - root app em `Unknown` por timeout no GitHub
+## AI Lab - tentativa prematura de bootstrap do cluster
 
 ### Sintoma
-- a `Application` `ai-lab-root` existe, mas fica com `Sync Status = Unknown`
-- o Argo CD mostra erro ao carregar o estado alvo do repositorio GitOps
+- alguem tenta usar `use_ailab`, kubeconfig do `ai-lab` ou um bootstrap de Argo CD antes do cluster existir na GCP
+- surgem referencias a `terraform/clusters/ai-lab/bootstrap`, `~/.kube/config-ai-lab.yaml` ou `ai-lab-root`
 
-Erro observado:
-
-```text
-Failed to load target state: failed to generate manifest for source 1 of 1: rpc error: code = Unknown desc = Get "https://github.com/bhenriq-souza/homelab-gitops.git/info/refs?service=git-upload-pack": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
-```
-
-### Contexto operacional relevante
-- o `ai-lab` roda em uma instancia Ubuntu sobre WSL em um host Windows 11
-- o acesso administrativo usa `~/.kube/config-ai-lab.yaml`
-- antes de qualquer comando, executar `use_ailab` e validar com `kctx_status`
-- o erro atual ocorre no `argocd-repo-server`, nao no `argocd-server`
-
-### Possiveis causas
-- pods do cluster sem conectividade de saida TCP `443` para endpoints do GitHub
-- comportamento especifico de egress/rede do K3s rodando sobre WSL
-- bloqueio seletivo fora do Kubernetes, mesmo com DNS funcional e NAT aparente no host
+### Contexto operacional correto
+- o cluster local provisório do `ai-lab` em Ubuntu/WSL foi descontinuado
+- a etapa atual do `ai-lab` e somente a fundacao GCP em `terraform/clusters/ai-lab/foundation`
+- nao existe kubeconfig do `ai-lab` valido nesta fase
+- nao existe root app do Argo CD ativo para o `ai-lab` nesta fase
 
 ### Passos de validacao
-1. Confirmar o status do root app:
+1. Confirmar o entrypoint correto da fase atual:
 
 ```bash
-use_ailab
-kubectl -n argocd get applications.argoproj.io
-kubectl -n argocd describe application ai-lab-root
+ls terraform/clusters/ai-lab
+terraform -chdir=terraform/clusters/ai-lab/foundation validate
 ```
 
-2. Confirmar logs do `repo-server`:
+2. Confirmar que o artefato local do kubeconfig nao deve mais existir:
 
 ```bash
-use_ailab
-kubectl -n argocd logs deploy/argocd-repo-server --tail=200
+test ! -f ~/.kube/config-ai-lab.yaml
 ```
 
-3. Comparar egress do host e de um pod:
+3. Validar se o proximo passo esperado ainda e fundacao cloud:
 
 ```bash
-curl -I https://github.com
-
-use_ailab
-kubectl run netcheck --rm -i --restart=Never --image=curlimages/curl:8.12.1 --command -- sh -c 'curl -4 -v --connect-timeout 5 --max-time 10 https://github.com -o /dev/null'
+terraform -chdir=terraform/clusters/ai-lab/foundation plan
 ```
-
-4. Validar alcance de rede basico de um pod:
-
-```bash
-use_ailab
-kubectl run netcheck --rm -i --restart=Never --image=curlimages/curl:8.12.1 --command -- sh -c 'curl -k -I --max-time 10 https://kubernetes.default.svc && curl -I --max-time 10 https://1.1.1.1'
-```
-
-### Evidencia coletada ate agora
-- `terraform -chdir=terraform/clusters/ai-lab/bootstrap plan -no-color` retorna `No changes`
-- `argocd`, `ai-lab-root` e o secret inicial de admin foram criados com sucesso
-- o `argocd-repo-server` registra `git fetch origin --tags --force --prune failed timeout after 1m30s`
-- DNS para `github.com` resolve corretamente dentro do cluster
-- a conexao TCP para `github.com:443` expira a partir de um pod comum
-- a conexao para a API do Kubernetes funciona normalmente a partir do mesmo pod
 
 ### Acao corretiva
-- ainda nao definida
-- a trilha principal de investigacao deve focar em egress dos pods do `ai-lab` no ambiente Ubuntu sobre WSL no Windows 11
-- evitar tratar como problema de Terraform ou credencial do Argo CD enquanto o timeout TCP externo persistir
+- nao recriar kubeconfig do `ai-lab` nesta etapa
+- nao reintroduzir bootstrap do Argo CD antes da instalacao futura do K3s
+- seguir com a fundacao GCP e abrir uma nova fase apenas quando a VM estiver pronta para receber o cluster
+
+## AI Lab - GPU T4 indisponivel apesar de quota regional
+
+### Sintoma
+- `terraform apply` falha ao criar a VM do `ai-lab` com `n1-standard-8` e `1 x nvidia-tesla-t4`
+- a falha ocorre depois da validacao do Terraform e mesmo com quota regional de T4 disponivel
+- mensagens tipicas:
+
+```text
+The zone '.../zones/<zone>' does not have enough resources available to fulfill the request.
+A n1-standard-8 VM instance with 1 nvidia-tesla-t4 accelerator(s) is currently unavailable...
+```
+
+### Possiveis causas
+- indisponibilidade momentanea de capacidade fisica na zona
+- combinacao de machine type e GPU aceita no catalogo, mas sem estoque real naquele momento
+- variacao de suporte efetivo por zona, mesmo dentro da mesma regiao
+
+### Passos de validacao
+1. Confirmar que a combinacao existe no catalogo da zona:
+
+```bash
+gcloud compute machine-types describe n1-standard-8 --zone <zone>
+gcloud compute accelerator-types describe nvidia-tesla-t4 --zone <zone>
+```
+
+2. Confirmar quota regional:
+
+```bash
+gcloud compute regions describe <region> --format='yaml(quotas)'
+```
+
+3. Gerar `plan` salvo antes de aplicar:
+
+```bash
+terraform -chdir=terraform/clusters/ai-lab/foundation plan -input=false -out=tfplan
+terraform -chdir=terraform/clusters/ai-lab/foundation apply -input=false -auto-approve tfplan
+```
+
+4. Se a VM anterior ja tiver sido removida, validar rapidamente o que ainda restou em estado:
+
+```bash
+terraform -chdir=terraform/clusters/ai-lab/foundation state list
+```
+
+### Historico observado
+- `us-central1-a`, `us-central1-b`, `us-central1-c`, `us-central1-f`
+- `us-east1-b`, `us-east1-c`, `us-east1-d`
+- `us-east4-b`
+- `europe-west1-b`, `europe-west1-c`, `europe-west1-d`
+
+Todas as tentativas acima falharam por indisponibilidade/capacidade para `n1-standard-8 + 1 x T4`.
+
+### Acao corretiva
+- nao insistir em `apply` repetidos na mesma zona quando o erro for claramente de capacidade
+- preferir uma destas saidas:
+	- recriar temporariamente a VM sem GPU para restaurar o ambiente
+	- testar outra combinacao de machine type/GPU
+	- pausar a entrega e retomar com nova estrategia de capacity planning
+
+### Acao de rollback usada
+- executar `terraform destroy -input=false -auto-approve` no entrypoint da foundation
+- confirmar estado vazio com:
+
+```bash
+terraform -chdir=terraform/clusters/ai-lab/foundation state list
+```
 
 ## PostgreSQL em dev - pod nao fica pronto
 

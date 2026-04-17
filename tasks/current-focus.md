@@ -63,11 +63,13 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 
 ## Nota operacional paralela - Expansao do ai-lab
 - estrutura GitOps `clusters/ai-lab` criada e validada em `homelab-gitops`
-- bootstrap Terraform de `terraform/clusters/ai-lab/bootstrap` aplicado e sem pendencias de plano
-- `argocd` e `ai-lab-root` criados no cluster `ai-lab`
-- o `ai-lab` roda em uma instancia Ubuntu sobre WSL em um host Windows 11
-- bloqueio atual: `ai-lab-root` em `Unknown` porque o `argocd-repo-server` nao consegue acessar o repositorio GitHub por timeout TCP `443`
-- proxima analise do `ai-lab` deve focar em egress/rede dos pods, nao em Terraform
+- discovery e pricing do `ai-lab` encerrados com decisao consolidada de seguir na GCP
+- cluster K3s provisório do laptop admin/WSL descontinuado e removido do caminho arquitetural alvo
+- novo entrypoint Terraform do `ai-lab`: `terraform/clusters/ai-lab/foundation`
+- escopo atual do `ai-lab`: VPC, subnet, firewall restritivo, IP publico estatico, VM base, disco de dados e service account dedicada
+- a arvore GitOps `clusters/ai-lab` permanece como scaffold preparado para a fase futura do cluster
+- fora do escopo atual: instalacao do K3s, bootstrap do Argo CD, VPN, NAT e automacoes especificas para GPU
+- proxima analise do `ai-lab` deve partir da fundacao GCP e somente depois abrir a fase de bootstrap do cluster
 
 ## Riscos e cuidados operacionais
 - controlar consumo de recursos da stack (requests/limits conservadores)

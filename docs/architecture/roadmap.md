@@ -46,6 +46,8 @@
 - validar estratégia de backup/restore do banco antes da promoção para produção
 
 ## Fase 9 - Híbrido e fleet
+- provisionar a fundacao base do `ai-lab` na GCP
+- manter o bootstrap do cluster `ai-lab` para etapa posterior, apos a base cloud existir
 - consolidar conectividade on-prem + cloud
 - preparar base para gestão multi-cluster
 - definir estrutura GitOps cluster-first para novos clusters
