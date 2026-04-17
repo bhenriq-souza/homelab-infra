@@ -41,38 +41,41 @@ Estabelecer o pipeline de CI/CD completo para aplicacoes customizadas do homelab
 ## Macrotarefas (ordem de implementacao)
 
 ### 1. Artifact Registry (Terraform)
-- [ ] criar modulo `terraform/modules/artifact-registry`
-- [ ] aplicar no entrypoint do cluster homelab
-- [ ] validar acesso ao registry via gcloud
+- [x] criar modulo `terraform/modules/artifact-registry`
+- [x] aplicar no entrypoint do cluster homelab
+- [x] validar acesso ao registry via gcloud
 
 ### 2. GitHub OIDC -> GCP WIF (Terraform)
-- [ ] criar modulo `terraform/modules/gcp-github-wif`
-- [ ] provisionar pool, provider e SA `github-actions-ci`
-- [ ] configurar attribute mapping (repository, repository_owner, ref)
-- [ ] binding IAM para `roles/artifactregistry.writer`
-- [ ] suportar multiplos repos de app via variavel de lista
+- [x] criar modulo `terraform/modules/gcp-github-wif`
+- [x] provisionar pool, provider e SA `github-actions-ci`
+- [x] configurar attribute mapping (repository, repository_owner, ref)
+- [x] binding IAM para `roles/artifactregistry.writer`
+- [x] suportar multiplos repos de app via variavel de lista
 
 ### 3. Image Pull Secret (Terraform + GitOps)
-- [ ] criar SA com `roles/artifactregistry.reader`
-- [ ] exportar key JSON para o GCP Secret Manager
-- [ ] criar ExternalSecret para `imagePullSecret` em `dev-apps`
-- [ ] criar ExternalSecret para `imagePullSecret` em `prd-apps`
-- [ ] validar pull de imagem privada no cluster
+- [x] criar SA com `roles/artifactregistry.reader`
+- [x] exportar dockerconfigjson completo para o GCP Secret Manager
+- [x] criar ExternalSecret para `imagePullSecret` em `dev-apps`
+- [x] criar ExternalSecret para `imagePullSecret` em `prd-apps`
+- [x] validar pull de imagem privada no cluster
 
 ### 4. Reusable Workflow (homelab-gitops)
-- [ ] criar `homelab-gitops/.github/workflows/docker-build-push.yaml`
-- [ ] implementar steps: auth GCP, docker build, push AR, update manifest, commit
-- [ ] configurar PAT fine-grained como secret de organizacao ou repo
+- [x] criar `homelab-gitops/.github/workflows/docker-build-push.yaml`
+- [x] implementar steps: auth GCP, docker build, push AR, update manifest, commit
+- [x] configurar PAT fine-grained como secret do repo
 - [ ] documentar inputs esperados do caller workflow
 
 ### 5. Caller Workflow (app repo)
-- [ ] criar workflow caller no primeiro app repo (ex: `finances-control-backend`)
+- [x] criar workflow caller de teste para myapp (workflow_dispatch no homelab-gitops)
+- [ ] criar workflow caller no primeiro app repo real (ex: `finances-control-backend`)
 - [ ] mapear branch -> environment (develop=dev, main=prd)
-- [ ] validar fluxo end-to-end: push -> build -> push image -> update gitops -> argocd sync
+- [ ] validar fluxo end-to-end via app repo: push -> build -> push image -> update gitops -> argocd sync
 
 ### 6. Validacao end-to-end
-- [ ] push em develop -> imagem no AR com tag sha -> manifest atualizado em dev -> deploy no K3s
-- [ ] push em main -> imagem no AR com tag sha+semver -> manifest atualizado em prd -> deploy no K3s
+- [x] imagem publicada manualmente no AR e myapp fazendo pull com sucesso no cluster
+- [x] ExternalSecret gerando imagePullSecret funcional via ESO + GCP Secret Manager
+- [x] ArgoCD sincronizando deployment com imagem do Artifact Registry
+- [ ] validar fluxo completo via GitHub Actions (workflow_dispatch ou push em app repo)
 - [ ] rollback via revert de commit no homelab-gitops
 
 ## Criterios de aceite

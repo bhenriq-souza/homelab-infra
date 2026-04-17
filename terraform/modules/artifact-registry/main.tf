@@ -86,6 +86,13 @@ resource "google_secret_manager_secret" "reader_sa_key" {
 resource "google_secret_manager_secret_version" "reader_sa_key" {
   count = var.create && var.create_reader_service_account && var.create_reader_sa_key && var.store_reader_key_in_secret_manager ? 1 : 0
 
-  secret      = google_secret_manager_secret.reader_sa_key[0].id
-  secret_data = google_service_account_key.reader[0].private_key
+  secret = google_secret_manager_secret.reader_sa_key[0].id
+  secret_data = jsonencode({
+    "auths" = {
+      "${var.location}-docker.pkg.dev" = {
+        "username" = "_json_key_base64"
+        "password" = google_service_account_key.reader[0].private_key
+      }
+    }
+  })
 }

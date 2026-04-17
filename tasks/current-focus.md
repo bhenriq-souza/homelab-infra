@@ -81,12 +81,30 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 Consolidar logs centralizados e avancar para baseline de PostgreSQL no ambiente `dev`, mantendo rollout incremental e baixo consumo de recursos.
 
 ## Proxima fase planejada - Phase 07: CI/CD Pipeline
-Discovery concluido e decisoes consolidadas em ADR-0006. Blocos de implementacao definidos:
-1. Artifact Registry (Terraform) - registry unico `homelab-apps`
-2. GitHub OIDC -> GCP WIF (Terraform) - autenticacao sem chave estatica
-3. Image Pull Secret (Terraform + GitOps) - SA key via Secret Manager + ESO
-4. Reusable Workflow (homelab-gitops) - centralizado para multiplos app repos
-5. Caller Workflow (app repos) - workflow minimo por app
-6. Validacao end-to-end - develop->dev, main->prd
+Discovery concluido, decisoes consolidadas em ADR-0006 e implementacao parcial concluida.
+
+### Concluido nesta fase
+- Artifact Registry `homelab-apps` provisionado no GCP via Terraform (modulo `artifact-registry`)
+- GitHub Actions WIF pool/provider provisionados via Terraform (modulo `gcp-github-wif`)
+- SA `github-actions-ci` com `roles/artifactregistry.writer` + WIF binding para `homelab-gitops`
+- SA `ar-reader` com `roles/artifactregistry.reader` + key como dockerconfigjson no Secret Manager
+- ExternalSecret criando `imagePullSecret` em `dev-apps` e `prd-apps` via ESO
+- Reusable workflow `docker-build-push.yaml` criado no `homelab-gitops`
+- Caller workflow de teste `ci-cd-myapp.yaml` (workflow_dispatch) criado
+- Dockerfile do myapp criado e imagem publicada manualmente no AR
+- Deployment do myapp (dev e prd) apontando para `us-central1-docker.pkg.dev/homelab-492918/homelab-apps/myapp:latest`
+- Pull de imagem privada validado com sucesso no cluster via imagePullSecret + ESO
+- Secrets do GitHub configurados: `GCP_WIF_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `GITOPS_PAT`
+
+### Aprendizados operacionais
+- API `artifactregistry.googleapis.com` precisou ser habilitada manualmente (`gcp_manage_project_services = false`)
+- Template ESO com `printf` e aspas escapadas causa erro de parsing; solucao: armazenar dockerconfigjson completo no Secret Manager e ExternalSecret sem template complexo
+- Separacao de ambientes no gitops e por diretorio (`workloads/dev/` vs `workloads/prd/`), nao por branch do repo gitops
+
+### Pendente para completar a fase
+- validar fluxo completo via GitHub Actions (workflow_dispatch do myapp)
+- criar caller workflow no primeiro app repo real (`finances-control-backend`)
+- validar rollback via revert de commit no homelab-gitops
+- documentar inputs do reusable workflow
 
 Referencia: `docs/backlog/phase-07-cicd-pipeline.md` e `docs/adr/ADR-0006-cicd-with-github-actions-and-artifact-registry.md`
