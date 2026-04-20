@@ -60,8 +60,18 @@ github_wif_pool_id     = "github-actions-pool"
 github_wif_provider_id = "github-actions-provider"
 github_organization    = "bhenriq-souza"
 github_allowed_repositories = [
-  "bhenriq-souza/homelab-gitops"
+  "bhenriq-souza/homelab-gitops",
+  "bhenriq-souza/typescript-common-packages",
+  "bhenriq-souza/ts-express-app"
 ]
 github_dev_branches          = ["develop"]
 github_prd_branches          = ["main"]
 github_ci_service_account_id = "github-actions-ci"
+
+# Artifact Registry npm (pacotes TypeScript)
+artifact_registry_npm_enabled       = true
+artifact_registry_npm_repository_id = "typescript-packages-dev"
+
+# GCS Nx Cache
+gcs_nx_cache_enabled     = true
+gcs_nx_cache_bucket_name = "typescript-nx-cache"

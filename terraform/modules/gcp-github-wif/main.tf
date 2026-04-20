@@ -86,12 +86,29 @@ resource "google_service_account_iam_member" "wif_binding" {
   member             = "principalSet://iam.googleapis.com/projects/${var.project_number}/locations/global/workloadIdentityPools/${var.wif_pool_id}/attribute.repository/${each.value}"
 }
 
+locals {
+  # Merge retrocompativel: se a variavel legada (singular) estiver preenchida,
+  # inclui na lista; caso contrario, usa apenas artifact_registry_repositories.
+  effective_ar_repositories = distinct(compact(concat(
+    var.artifact_registry_repositories,
+    [var.artifact_registry_repository]
+  )))
+}
+
 resource "google_artifact_registry_repository_iam_member" "ci_writer" {
-  count = var.create && var.artifact_registry_repository != "" ? 1 : 0
+  for_each = var.create ? toset(local.effective_ar_repositories) : toset([])
 
   project    = var.project_id
   location   = var.artifact_registry_location
-  repository = var.artifact_registry_repository
+  repository = each.value
   role       = "roles/artifactregistry.writer"
   member     = "serviceAccount:${google_service_account.ci[0].email}"
+}
+
+resource "google_storage_bucket_iam_member" "ci_object_admin" {
+  for_each = var.create ? toset(var.gcs_buckets) : toset([])
+
+  bucket = each.value
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.ci[0].email}"
 }

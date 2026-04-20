@@ -73,15 +73,27 @@ variable "ci_service_account_id" {
 }
 
 variable "artifact_registry_repository" {
-  description = "Nome do repositorio Artifact Registry para conceder permissao de escrita. Vazio ignora."
+  description = "(Legado) Nome unico do repositorio AR. Preferir artifact_registry_repositories. Mantido para retrocompatibilidade."
   type        = string
   default     = ""
+}
+
+variable "artifact_registry_repositories" {
+  description = "Lista de repositorios Artifact Registry para conceder artifactregistry.writer a SA de CI."
+  type        = list(string)
+  default     = []
 }
 
 variable "artifact_registry_location" {
   description = "Regiao do Artifact Registry."
   type        = string
   default     = "us-central1"
+}
+
+variable "gcs_buckets" {
+  description = "Lista de nomes de buckets GCS para conceder storage.objectAdmin a SA de CI."
+  type        = list(string)
+  default     = []
 }
 
 variable "attribute_condition" {
