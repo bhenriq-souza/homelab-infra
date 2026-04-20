@@ -259,3 +259,62 @@ variable "github_ci_service_account_id" {
   type        = string
   default     = "github-actions-ci"
 }
+
+# --- Artifact Registry npm ---
+
+variable "artifact_registry_npm_enabled" {
+  description = "Habilita criacao do Artifact Registry formato npm para pacotes TypeScript."
+  type        = bool
+  default     = false
+}
+
+variable "artifact_registry_npm_repository_id" {
+  description = "ID do repositorio npm no Artifact Registry."
+  type        = string
+  default     = "typescript-packages-dev"
+}
+
+variable "artifact_registry_npm_description" {
+  description = "Descricao do repositorio npm no Artifact Registry."
+  type        = string
+  default     = "Registry npm para artefatos dev de PRs do monorepo typescript-common-packages"
+}
+
+variable "artifact_registry_npm_dev_retention_days" {
+  description = "Dias para reter artefatos dev antes de cleanup."
+  type        = number
+  default     = 30
+}
+
+variable "artifact_registry_npm_dev_tag_prefixes" {
+  description = "Prefixos de dist-tag npm considerados dev para cleanup."
+  type        = list(string)
+  default     = ["dev"]
+}
+
+variable "artifact_registry_npm_keep_minimum_versions" {
+  description = "Numero minimo de versoes a manter por pacote. Null desabilita."
+  type        = number
+  default     = null
+  nullable    = true
+}
+
+# --- GCS Nx Cache ---
+
+variable "gcs_nx_cache_enabled" {
+  description = "Habilita criacao do bucket GCS para cache remoto do Nx."
+  type        = bool
+  default     = false
+}
+
+variable "gcs_nx_cache_bucket_name" {
+  description = "Nome do bucket GCS para cache Nx."
+  type        = string
+  default     = "typescript-nx-cache"
+}
+
+variable "gcs_nx_cache_lifecycle_age_days" {
+  description = "Dias para reter objetos de cache antes de deletar."
+  type        = number
+  default     = 90
+}

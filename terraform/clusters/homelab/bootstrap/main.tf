@@ -48,20 +48,51 @@ module "artifact_registry" {
   manage_project_services            = var.gcp_manage_project_services
 }
 
+module "artifact_registry_npm" {
+  source = "../../../modules/artifact-registry-npm"
+
+  create                  = var.artifact_registry_npm_enabled
+  project_id              = var.gcp_project_id
+  location                = var.gcp_region
+  repository_id           = var.artifact_registry_npm_repository_id
+  description             = var.artifact_registry_npm_description
+  dev_retention_days      = var.artifact_registry_npm_dev_retention_days
+  dev_tag_prefixes        = var.artifact_registry_npm_dev_tag_prefixes
+  keep_minimum_versions   = var.artifact_registry_npm_keep_minimum_versions
+  manage_project_services = var.gcp_manage_project_services
+}
+
+module "gcs_nx_cache" {
+  source = "../../../modules/gcs-nx-cache"
+
+  create                  = var.gcs_nx_cache_enabled
+  project_id              = var.gcp_project_id
+  location                = var.gcp_region
+  bucket_name             = var.gcs_nx_cache_bucket_name
+  lifecycle_age_days      = var.gcs_nx_cache_lifecycle_age_days
+  manage_project_services = var.gcp_manage_project_services
+}
+
 module "gcp_github_wif" {
   source = "../../../modules/gcp-github-wif"
 
-  create                       = var.github_wif_enabled
-  project_id                   = var.gcp_project_id
-  project_number               = var.gcp_project_number
-  wif_pool_id                  = var.github_wif_pool_id
-  wif_provider_id              = var.github_wif_provider_id
-  github_organization          = var.github_organization
-  allowed_repositories         = var.github_allowed_repositories
-  dev_branches                 = var.github_dev_branches
-  prd_branches                 = var.github_prd_branches
-  ci_service_account_id        = var.github_ci_service_account_id
-  artifact_registry_repository = var.artifact_registry_enabled ? module.artifact_registry.repository_id : ""
-  artifact_registry_location   = var.gcp_region
-  manage_project_services      = var.gcp_manage_project_services
+  create                          = var.github_wif_enabled
+  project_id                      = var.gcp_project_id
+  project_number                  = var.gcp_project_number
+  wif_pool_id                     = var.github_wif_pool_id
+  wif_provider_id                 = var.github_wif_provider_id
+  github_organization             = var.github_organization
+  allowed_repositories            = var.github_allowed_repositories
+  dev_branches                    = var.github_dev_branches
+  prd_branches                    = var.github_prd_branches
+  ci_service_account_id           = var.github_ci_service_account_id
+  artifact_registry_repository    = var.artifact_registry_enabled ? module.artifact_registry.repository_id : ""
+  artifact_registry_repositories  = compact([
+    var.artifact_registry_npm_enabled ? module.artifact_registry_npm.repository_id : ""
+  ])
+  artifact_registry_location      = var.gcp_region
+  gcs_buckets                     = compact([
+    var.gcs_nx_cache_enabled ? module.gcs_nx_cache.bucket_name : ""
+  ])
+  manage_project_services         = var.gcp_manage_project_services
 }

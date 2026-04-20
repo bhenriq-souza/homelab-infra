@@ -56,3 +56,22 @@ output "github_ci_service_account_email" {
   description = "Email da SA de CI para uso no GitHub Actions."
   value       = module.gcp_github_wif.ci_service_account_email
 }
+
+# --- Artifact Registry npm ---
+
+output "artifact_registry_npm_url" {
+  description = "URL base do registry npm para configuracao em .npmrc."
+  value       = module.artifact_registry_npm.repository_url
+}
+
+# --- GCS Nx Cache ---
+
+output "gcs_nx_cache_bucket_name" {
+  description = "Nome do bucket GCS para cache remoto do Nx."
+  value       = module.gcs_nx_cache.bucket_name
+}
+
+output "gcs_nx_cache_bucket_url" {
+  description = "URL gs:// do bucket para configuracao do Nx."
+  value       = module.gcs_nx_cache.bucket_url
+}

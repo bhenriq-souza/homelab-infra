@@ -1,4 +1,6 @@
 **/.terraform/*
+*.tfplan
+tfplan
 
 # Local sensitive credentials (never commit real keys)
 secrets/*/*
