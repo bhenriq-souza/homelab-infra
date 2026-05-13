@@ -26,8 +26,7 @@ Funcao de verificacao:
 
 ### Politica de uso
 - qualquer operacao no `homelab` deve ser precedida por `use_homelab`
-- qualquer operacao no `ai-lab` baseada em kubeconfig so deve usar `use_ailab` depois que o futuro cluster existir
-- a fundacao GCP do `ai-lab` nao usa kubeconfig nem perfil Kubernetes; ela usa autenticacao Google para o provider Terraform
+- qualquer operacao no `ai-lab` baseada em kubeconfig so deve usar `use_ailab` depois que o K3s for instalado na workstation local (`192.168.15.103`)
 - `kctx_status` deve ser usado para confirmar `KUBECONFIG`, `KUBE_CONTEXT`, `kubectl current-context` e `api-server`
 - nao confiar no contexto herdado da sessao anterior
 
@@ -141,84 +140,30 @@ Regras de segurança obrigatórias:
 Observação operacional:
 - a cópia externa do kubeconfig pode precisar ser atualizada futuramente por rotação/renovação de certificados inline
 
-## Runbook - Fundacao GCP do ai-lab
+## Runbook - Proximos passos do AI Lab (Fase 9)
 
-### Objetivo
-Provisionar a base do `ai-lab` na GCP sem instalar o K3s nesta etapa.
+> A infraestrutura GCP do `ai-lab` foi descontinuada (ADR-0007). O `ai-lab` e a workstation Ubuntu local (`192.168.15.103`). O runbook de fundacao GCP foi removido.
 
-### Escopo
-- VPC dedicada
-- subnet principal
-- firewall restritivo para SSH administrativo
-- IP publico estatico
-- VM base
-- disco adicional para dados
-- service account dedicada da VM
+### Objetivo desta fase
+Instalar K3s na workstation AI Lab e bootstrapar Argo CD para ativar o cluster como segundo no managed.
 
-### Pre-check
-1. Validar ferramentas locais.
+### Pre-requisitos
+- acesso SSH operacional: `ssh homelab` (cluster homelab) e acesso direto ao AI Lab via LAN
+- kubeconfig do homelab funcionando: `use_homelab && kubectl get nodes`
+- workstation AI Lab com Ubuntu instalado e acesso sudo
 
-```bash
-terraform -version
-gcloud version
-```
+### Passos planejados
 
-2. Autenticar o provider Google.
+1. Reservar IP do AI Lab no roteador (formalizar `192.168.15.103` como DHCP reservado)
+2. Instalar K3s na workstation AI Lab
+3. Copiar e ajustar kubeconfig: `~/.kube/config-ai-lab.yaml`
+4. Configurar `use_ailab` no shell do laptop admin
+5. Bootstrapar Argo CD no cluster `ai-lab`
+6. Ativar `clusters/ai-lab` no repositorio GitOps como cluster gerenciado
 
-Opcoes aceitas:
-- `gcloud auth application-default login`
-- `export GOOGLE_APPLICATION_CREDENTIALS=/caminho/da/credencial.json`
-
-3. Revisar os parametros do entrypoint.
-
-```bash
-sed -n '1,200p' terraform/clusters/ai-lab/foundation/terraform.tfvars
-```
-
-Campos que devem ser ajustados antes do primeiro `plan`:
-- `project_id`
-- `admin_source_ranges`
-- `machine_type`, se o sizing padrao nao for o desejado
-
-### Execucao
-1. Inicializar o entrypoint.
-
-```bash
-terraform -chdir=terraform/clusters/ai-lab/foundation init -backend=false
-```
-
-2. Validar a configuracao.
-
-```bash
-terraform -chdir=terraform/clusters/ai-lab/foundation validate
-```
-
-3. Gerar o plano.
-
-```bash
-terraform -chdir=terraform/clusters/ai-lab/foundation plan
-```
-
-4. Aplicar somente depois de revisar projeto, CIDR e ranges administrativos.
-
-```bash
-terraform -chdir=terraform/clusters/ai-lab/foundation apply
-```
-
-### Validacao minima apos o apply
-- `terraform -chdir=terraform/clusters/ai-lab/foundation output`
-- confirmar nome da VPC e subnet
-- confirmar IP publico estatico da VM
-- confirmar IP interno da VM
-- confirmar disco adicional criado
-
-### Fora do escopo deste runbook
-- criar kubeconfig do `ai-lab`
-- instalar K3s
-- bootstrapar Argo CD
-- abrir a porta `6443`
-
-Esses passos so devem existir na fase seguinte, depois que a VM base estiver pronta.
+### Referencia
+- backlog: `docs/backlog/phase-08-hybrid-fleet.md`
+- ADR: `docs/adr/ADR-0007-host-ai-lab-on-local-ubuntu.md`
 
 ## Runbook - Bootstrap Terraform (shared, dev, prd)
 

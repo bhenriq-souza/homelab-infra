@@ -146,109 +146,54 @@ kubectl -n argocd logs deploy/argocd-application-controller --tail=200 -f
 - tempo de sync reduzido/estavel para apps do bootstrap
 - ausencia de novos eventos de `OOMKilled`
 
-## AI Lab - tentativa prematura de bootstrap do cluster
+## AI Lab - tentativa prematura de bootstrap do cluster K3s
 
 ### Sintoma
-- alguem tenta usar `use_ailab`, kubeconfig do `ai-lab` ou um bootstrap de Argo CD antes do cluster existir na GCP
-- surgem referencias a `terraform/clusters/ai-lab/bootstrap`, `~/.kube/config-ai-lab.yaml` ou `ai-lab-root`
+- alguem tenta usar `use_ailab`, `~/.kube/config-ai-lab.yaml` ou configurar root app do Argo CD antes do K3s estar instalado na workstation AI Lab
 
-### Contexto operacional correto
-- o cluster local provisório do `ai-lab` em Ubuntu/WSL foi descontinuado
-- a etapa atual do `ai-lab` e somente a fundacao GCP em `terraform/clusters/ai-lab/foundation`
-- nao existe kubeconfig do `ai-lab` valido nesta fase
+### Contexto operacional correto (ADR-0007)
+- o `ai-lab` e a workstation Ubuntu local (`192.168.15.103`), nao uma VM na GCP
+- o K3s ainda nao esta instalado na workstation — essa e a proxima etapa (Fase 9)
+- nao existe kubeconfig valido para o `ai-lab` nesta fase
 - nao existe root app do Argo CD ativo para o `ai-lab` nesta fase
+- a estrutura `clusters/ai-lab` no repositorio GitOps e um scaffold preparado, nao um cluster ativo
 
 ### Passos de validacao
-1. Confirmar o entrypoint correto da fase atual:
+1. Confirmar que o K3s ainda nao esta instalado no AI Lab:
 
 ```bash
-ls terraform/clusters/ai-lab
-terraform -chdir=terraform/clusters/ai-lab/foundation validate
+# no AI Lab (192.168.15.103)
+which k3s || echo "k3s nao instalado"
 ```
 
-2. Confirmar que o artefato local do kubeconfig nao deve mais existir:
+2. Confirmar que o kubeconfig do AI Lab nao existe:
 
 ```bash
-test ! -f ~/.kube/config-ai-lab.yaml
-```
-
-3. Validar se o proximo passo esperado ainda e fundacao cloud:
-
-```bash
-terraform -chdir=terraform/clusters/ai-lab/foundation plan
+test ! -f ~/.kube/config-ai-lab.yaml && echo "correto — ai-lab ainda nao tem cluster"
 ```
 
 ### Acao corretiva
-- nao recriar kubeconfig do `ai-lab` nesta etapa
-- nao reintroduzir bootstrap do Argo CD antes da instalacao futura do K3s
-- seguir com a fundacao GCP e abrir uma nova fase apenas quando a VM estiver pronta para receber o cluster
+- nao criar kubeconfig do `ai-lab` ate o K3s ser instalado
+- nao reintroduzir bootstrap do Argo CD antes da instalacao do K3s
+- consultar o backlog em `docs/backlog/phase-08-hybrid-fleet.md` para os proximos passos da Fase 9
 
-## AI Lab - GPU T4 indisponivel apesar de quota regional
+## AI Lab - historico de tentativas GCP (encerrado)
 
-### Sintoma
-- `terraform apply` falha ao criar a VM do `ai-lab` com `n1-standard-8` e `1 x nvidia-tesla-t4`
-- a falha ocorre depois da validacao do Terraform e mesmo com quota regional de T4 disponivel
-- mensagens tipicas:
+> **Esta secao e apenas registro historico.** A abordagem de hospedar o `ai-lab` na GCP foi descontinuada (ADR-0007). O `ai-lab` e agora a workstation Ubuntu local com RTX 5070.
 
-```text
-The zone '.../zones/<zone>' does not have enough resources available to fulfill the request.
-A n1-standard-8 VM instance with 1 nvidia-tesla-t4 accelerator(s) is currently unavailable...
-```
+### Contexto
+- foram tentadas VMs `n1-standard-8 + 1x nvidia-tesla-t4` em 11 regioes/zonas do GCP
+- o bloqueio foi de capacidade real do Compute Engine, nao de quota nem de sintaxe Terraform
+- a infraestrutura GCP do `ai-lab` foi destruida via `terraform destroy` ao final das tentativas
+- o estado Terraform em `terraform/clusters/ai-lab/foundation` ficou vazio apos o rollback
 
-### Possiveis causas
-- indisponibilidade momentanea de capacidade fisica na zona
-- combinacao de machine type e GPU aceita no catalogo, mas sem estoque real naquele momento
-- variacao de suporte efetivo por zona, mesmo dentro da mesma regiao
+### Regioes e zonas tentadas (todas falharam)
+- `us-central1-a/b/c/f`, `us-east1-b/c/d`, `us-east4-b`, `europe-west1-b/c/d`
 
-### Passos de validacao
-1. Confirmar que a combinacao existe no catalogo da zona:
-
-```bash
-gcloud compute machine-types describe n1-standard-8 --zone <zone>
-gcloud compute accelerator-types describe nvidia-tesla-t4 --zone <zone>
-```
-
-2. Confirmar quota regional:
-
-```bash
-gcloud compute regions describe <region> --format='yaml(quotas)'
-```
-
-3. Gerar `plan` salvo antes de aplicar:
-
-```bash
-terraform -chdir=terraform/clusters/ai-lab/foundation plan -input=false -out=tfplan
-terraform -chdir=terraform/clusters/ai-lab/foundation apply -input=false -auto-approve tfplan
-```
-
-4. Se a VM anterior ja tiver sido removida, validar rapidamente o que ainda restou em estado:
-
-```bash
-terraform -chdir=terraform/clusters/ai-lab/foundation state list
-```
-
-### Historico observado
-- `us-central1-a`, `us-central1-b`, `us-central1-c`, `us-central1-f`
-- `us-east1-b`, `us-east1-c`, `us-east1-d`
-- `us-east4-b`
-- `europe-west1-b`, `europe-west1-c`, `europe-west1-d`
-
-Todas as tentativas acima falharam por indisponibilidade/capacidade para `n1-standard-8 + 1 x T4`.
-
-### Acao corretiva
-- nao insistir em `apply` repetidos na mesma zona quando o erro for claramente de capacidade
-- preferir uma destas saidas:
-	- recriar temporariamente a VM sem GPU para restaurar o ambiente
-	- testar outra combinacao de machine type/GPU
-	- pausar a entrega e retomar com nova estrategia de capacity planning
-
-### Acao de rollback usada
-- executar `terraform destroy -input=false -auto-approve` no entrypoint da foundation
-- confirmar estado vazio com:
-
-```bash
-terraform -chdir=terraform/clusters/ai-lab/foundation state list
-```
+### Decisao tomada
+- abandonar abordagem GCP para o AI Lab
+- usar workstation Ubuntu local como AI Lab (hardware: RTX 5070 12 GB GDDR7, Ryzen 9 7900X, 64 GB DDR5)
+- ver `docs/adr/ADR-0007-host-ai-lab-on-local-ubuntu.md` e `docs/backlog/phase-08-ai-lab-gcp-foundation.md`
 
 ## PostgreSQL em dev - pod nao fica pronto
 

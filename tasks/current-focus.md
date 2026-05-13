@@ -61,15 +61,13 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 - consolidar plano e execucao em `docs/backlog/phase-08-postgresql-on-cluster.md`
 - manter toda mudanca GitOps em `homelab-gitops/clusters/` apos a remocao do legado
 
-## Nota operacional paralela - Expansao do ai-lab
-- estrutura GitOps `clusters/ai-lab` criada e validada em `homelab-gitops`
-- discovery e pricing do `ai-lab` encerrados com decisao consolidada de seguir na GCP
-- cluster K3s provisório do laptop admin/WSL descontinuado e removido do caminho arquitetural alvo
-- novo entrypoint Terraform do `ai-lab`: `terraform/clusters/ai-lab/foundation`
-- escopo atual do `ai-lab`: VPC, subnet, firewall restritivo, IP publico estatico, VM base, disco de dados e service account dedicada
-- a arvore GitOps `clusters/ai-lab` permanece como scaffold preparado para a fase futura do cluster
-- fora do escopo atual: instalacao do K3s, bootstrap do Argo CD, VPN, NAT e automacoes especificas para GPU
-- proxima analise do `ai-lab` deve partir da fundacao GCP e somente depois abrir a fase de bootstrap do cluster
+## Nota operacional paralela - AI Lab (workstation local)
+- decisao arquitetural consolidada em ADR-0007: `ai-lab` e a workstation Ubuntu local (`192.168.15.103`), nao uma VM na GCP
+- abordagem GCP para o `ai-lab` descontinuada apos falha de capacidade de GPU em multiplas regioes (ver `phase-08-ai-lab-gcp-foundation.md`)
+- infraestrutura GCP do `ai-lab` destruida; Terraform em `terraform/clusters/ai-lab/foundation` mantido como referencia historica
+- acesso operacional do AI Lab ao cluster homelab: SSH (`ssh homelab`) + kubeconfig (`~/.kube/config-homelab.yaml`) — validado e operacional
+- estrutura GitOps `clusters/ai-lab` permanece como scaffold no `homelab-gitops` para quando o K3s for instalado no AI Lab
+- proxima etapa do `ai-lab`: instalar K3s na workstation local e bootstrapar Argo CD (Fase 9)
 
 ## Riscos e cuidados operacionais
 - controlar consumo de recursos da stack (requests/limits conservadores)

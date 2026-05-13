@@ -1,7 +1,7 @@
 # ADR-0005: Host ai-lab on GCP and Defer K3s Install
 
 ## Status
-Accepted
+Superseded by ADR-0007
 
 ## Context
 O discovery e o pricing do ai-lab foram concluídos.

@@ -1,90 +1,69 @@
 # IP Plan
 
 ## Objetivo
-- consolidar a LAN local como primeiro bloco real do plano de endereçamento
-- registrar o estado atual já validado (host on-prem + SSH + DHCP reservado)
-- propor ranges iniciais do cluster local sem conflito com a LAN
-- manter placeholders apenas para blocos ainda não definidos (cloud e ingress final)
+- consolidar a LAN local como bloco real de endereçamento
+- registrar o estado atual validado de todos os nós da LAN
+- propor ranges do cluster local sem conflito com a LAN
+- manter placeholders apenas para blocos ainda não definidos
 
 ## LAN local (estado atual)
 
-### Bloco real de enderecamento
-- nome logico da LAN: `homelab`
+### Bloco real de endereçamento
+- nome lógico da LAN: `homelab`
 - CIDR da LAN: `192.168.15.0/24`
 - gateway: `192.168.15.1`
 - faixa DHCP do roteador: `192.168.15.2-192.168.15.200`
-- IP reservado do mini PC: `192.168.15.97`
+
+### Inventário de endpoints locais
+
+| Hostname | Papel | IP | Tipo |
+|---|---|---|---|
+| `hlb-beelink01` | Homelab server — host K3s | `192.168.15.97` | DHCP reservado |
+| AI Lab (workstation Ubuntu) | Dev environment + inferência LLM (RTX 5070, Ryzen 9 7900X, 64 GB DDR5) | `192.168.15.103` | DHCP reservado |
+| Laptop admin (Windows 11 + WSL) | Administração principal | DHCP dinâmico | sem reserva |
+| Roteador/gateway | MitraStar GPT-2742GX4X5v6 | `192.168.15.1` | fixo |
 
 ### Metadados operacionais
-- politica de IP estavel do mini PC: `DHCP reservado`
+- política de IP estável do mini PC: DHCP reservado
 - hostname do mini PC: `hlb-beelink01`
-- origem da reserva: `roteador Vivo MitraStar`
-- acesso administrativo atual: `SSH via LAN`
+- MAC do mini PC: `78:55:36:05:22:CA`
+- origem das reservas: roteador Vivo MitraStar
+- acesso administrativo atual: SSH via LAN para ambos os nós
 
-### Observacoes relevantes
-- mini PC e laptop estao na mesma LAN local
-- nao ha necessidade de exposicao publica nesta etapa
-- o objetivo imediato e estabilidade de acesso administrativo local
-- qualquer mudanca de IP/DHCP deve ser registrada aqui antes da aplicacao
+### Observações relevantes
+- mini PC, AI Lab e laptop estão na mesma LAN local
+- não há necessidade de exposição pública para acesso administrativo
+- o objetivo é estabilidade de acesso administrativo local
+- qualquer mudança de IP/DHCP deve ser registrada aqui antes da aplicação
 
 ### Validações mínimas da LAN
-- laptop alcança o mini PC por SSH no IP reservado
-- não há conflito entre IP reservado e faixa dinâmica do DHCP
+- laptop e AI Lab alcançam o mini PC por SSH no IP reservado
+- não há conflito entre IPs reservados e faixa dinâmica do DHCP
 - gateway responde a partir do mini PC
-- IP reservado permanece estável após reboot do mini PC
+- IPs reservados permanecem estáveis após reboot
 
-### Inventario de endpoints locais
-- laptop administrativo (Windows 11 + WSL): `DHCP dinamico (sem reserva)`
-- mini PC host principal: `192.168.15.97`
-- roteador/gateway: `192.168.15.1`
+## Estratégia de DNS (planejamento)
+- fase atual: manter DNS padrão entregue pelo roteador/operadora
+- fase futura: avaliar DNS público e/ou DNS local dedicado
+- status: `não alterar agora; manter como decisão futura`
 
-### Notas de decisão
-- o nome `homelab` é um rótulo de documentação para identificar a LAN atual
-- não é necessário criar uma LAN separada no roteador nesta fase
-- para reduzir risco operacional, o IP reservado do mini PC foi mantido igual ao IP atual observado
-
-## Estrategia de DNS (planejamento)
-- fase atual: manter DNS padrao entregue pelo roteador/operadora
-- fase futura: avaliar DNS publico e/ou DNS local dedicado
-- status: `nao alterar agora; manter como decisao futura`
-
-### Criterios para evoluir DNS
-- somente alterar DNS apos estabilidade comprovada do acesso SSH
-- registrar qualquer mudanca de DNS neste documento antes da aplicacao
-- validar navegacao e resolucao de nomes no laptop e no mini PC apos a mudanca
-
-## Cluster local (proposta inicial para Fase 03)
+## Cluster local (estado atual)
 - pod CIDR: `10.42.0.0/16`
 - service CIDR: `10.43.0.0/16`
 - ingress hostname/IP final: `<ingress-futuro>`
-- status: `pod/service definidos para bootstrap local; ingress final pendente`
 
-### Justificativa tecnica
-- a LAN atual utiliza `192.168.15.0/24`, sem sobreposição com `10.42.0.0/16` e `10.43.0.0/16`
-- os ranges propostos seguem padrão comum de instalação do K3s, reduzindo complexidade inicial
-- a decisão de ingress final permanece aberta para evitar acoplamento precoce
-
-### Validacao de nao conflito (estado atual)
+### Validação de não-conflito (estado atual)
 - LAN local: `192.168.15.0/24`
 - Pod CIDR local: `10.42.0.0/16`
 - Service CIDR local: `10.43.0.0/16`
-- resultado: `sem sobreposicao entre LAN e rede interna do cluster`
+- resultado: `sem sobreposição entre LAN e rede interna do cluster`
 
-## Cloud (GCP - fundacao inicial do ai-lab)
-- VPC CIDR inicial sugerido: `10.60.0.0/24`
-- subnet principal inicial: `10.60.0.0/24`
-- IPs reservados relevantes: `1 IP publico estatico para a VM base do ai-lab`
-- status: `fundacao cloud definida; conectividade hibrida e cluster K3s seguem para etapas futuras`
-
-### Validacao de nao conflito da fundacao cloud
-- LAN local: `192.168.15.0/24`
-- Pod CIDR local: `10.42.0.0/16`
-- Service CIDR local: `10.43.0.0/16`
-- Subnet inicial do ai-lab na GCP: `10.60.0.0/24`
-- resultado: `sem sobreposicao entre LAN, cluster local e base cloud do ai-lab`
+## GCP (CI/CD — estado atual)
+- a GCP não possui mais VM ou rede para o `ai-lab` (ver ADR-0007)
+- recursos GCP ativos: Artifact Registry, WIF, Secret Manager (sem VPC/subnet dedicada ao ai-lab)
+- status: `infraestrutura de VM do ai-lab destruída; GCP permanece apenas para CI/CD`
 
 ## Regras
-- nao permitir sobreposicao entre LAN, cluster local e cloud
-- qualquer alteracao deve ser documentada antes da implementacao
+- não permitir sobreposição entre LAN, cluster local e cloud
+- qualquer alteração deve ser documentada antes da implementação
 - ranges de cloud devem permanecer sem conflito com LAN e cluster local
-- nao promover conectividade hibrida antes da LAN local estar estavel

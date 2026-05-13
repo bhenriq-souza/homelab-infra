@@ -1,62 +1,59 @@
 # Hybrid Connectivity
 
 ## Objetivo
-Definir a evolucao da conectividade entre o ambiente on-prem e a GCP sem antecipar implementacoes desta etapa.
+Documentar a topologia de conectividade entre os ambientes do laboratório e definir a evolução para fases futuras.
 
-## Estado atual (fase em execucao)
-- conectividade apenas LAN local
-- acesso administrativo do laptop ao mini PC via SSH
-- sem VPN, sem tunel e sem conectividade privada com cloud
-- foco em estabilidade operacional local
+## Estado atual
+
+### Topologia LAN local
+- `hlb-beelink01` (homelab server): `192.168.15.97`
+- AI Lab (workstation Ubuntu): `192.168.15.103`
+- Laptop admin: DHCP dinâmico
+- Todos na mesma LAN `192.168.15.0/24`
+
+O acesso do AI Lab ao cluster K3s do homelab é direto via LAN — sem VPN, sem túnel.
+
+### Conectividade com GCP
+- sem VPC ou VM do `ai-lab` na GCP (ver ADR-0007)
+- a GCP é acessada pelo laptop admin e pelo AI Lab apenas via internet pública para CI/CD (GitHub Actions, Artifact Registry)
+- sem necessidade de conectividade privada híbrida nesta fase
 
 ## Plano evolutivo por fases
 
-### Fase futura 1 - conectividade privada simples (admin/testes)
-Objetivo arquitetural:
-- habilitar comunicacao privada basica entre on-prem e cloud para administracao e testes controlados
+### Fase futura 1 — cluster K3s no AI Lab
+Objetivo:
+- instalar K3s no AI Lab e bootstrapar Argo CD
+- o `ai-lab` já está na mesma LAN que o homelab, portanto sem necessidade de VPN
 
 Escopo esperado:
-- fluxos administrativos e de validacao tecnica entre ambientes
-- baixa complexidade operacional no inicio
+- kubeconfig do AI Lab em `~/.kube/config-ai-lab.yaml`
+- ativação de `clusters/ai-lab` no repositório GitOps como cluster gerenciado
+- função `use_ailab` já presente no `~/.zshrc` do AI Lab
 
-Resultado esperado:
-- operacao remota basica entre ambientes sem exposicao publica desnecessaria
-
-### Fase futura 2 - conectividade hibrida tipo site-to-site
-Objetivo arquitetural:
-- evoluir para um modelo mais completo de conectividade continua entre as redes
+### Fase futura 2 — conectividade híbrida com cloud
+Objetivo:
+- habilitar comunicação privada entre on-prem e GCP para testes híbridos reais
+- relevante apenas se um recurso cloud (VM, banco gerenciado etc.) for adicionado à topologia
 
 Escopo esperado:
-- rotas entre blocos on-prem e cloud com governanca de trafego
-- base para operacao recorrente entre ambientes
+- VPN ou Cloud Interconnect entre LAN e GCP VPC
+- rotas explícitas entre blocos on-prem e cloud
 
-Resultado esperado:
-- topologia hibrida mais previsivel, proxima de um cenario site-to-site
+## Princípio importante
+- fleet (gestão de clusters) não substitui conectividade de rede
+- mesmo com fleet, comunicação entre redes depende de desenho de conectividade, rotas e políticas
 
-## Principio importante
-- fleet (gestao de clusters) nao substitui conectividade de rede
-- mesmo com fleet, comunicacao entre redes depende de desenho de conectividade, rotas e politicas
+## Dependências para fase futura 2
+- definição do modelo de conectividade privada (VPN, túnel ou Cloud Interconnect)
+- CIDR da VPC cloud sem sobreposição com LAN e clusters locais
+- estratégia de DNS para recursos híbridos
 
-## Dependencias
-- LAN local estavel e documentada (mini PC com DHCP reservado e SSH funcional)
-- definicao futura de CIDRs de cluster local e cloud sem sobreposicao
-- definicao do modelo de resolucao de nomes (DNS) para trafego hibrido
-- criterios de exposicao de servicos administrativos e aplicacionais
+## Cuidados de arquitetura e operação
+- CIDR: evitar sobreposição entre LAN, clusters locais e rede cloud
+- rotas: garantir que o caminho entre redes seja explícito, previsível e auditável
+- DNS: separar resolução administrativa interna de nomes públicos quando necessário
+- exposição de serviços: priorizar acesso privado para administração
 
-## Decisoes pendentes
-- qual modelo de conectividade privada sera adotado na fase futura 1
-- quando evoluir da fase futura 1 para fase futura 2
-- quais servicos exigirao somente acesso privado e quais poderao ter exposicao controlada
-- estrategia final de DNS para recursos hibridos
-
-## Cuidados de arquitetura e operacao
-- CIDR: evitar qualquer sobreposicao entre LAN, cluster local e rede cloud
-- rotas: garantir que o caminho entre redes seja explicito, previsivel e auditavel
-- DNS: separar resolucao administrativa interna de nomes publicos quando necessario
-- exposicao de servicos: priorizar acesso privado para administracao e publicar apenas o estritamente necessario
-
-## Fora de escopo desta etapa
-- implementacao de VPN/site-to-site
-- provisionamento cloud real
-- Terraform e automacao de infraestrutura
-- implantacao de K3s e topologias de cluster
+## Fora de escopo desta fase
+- VPN ou site-to-site com GCP
+- novos recursos de compute na GCP para o `ai-lab`
