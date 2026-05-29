@@ -51,8 +51,8 @@
 - validar estratégia de backup/restore do banco antes da promoção para produção
 
 ## Fase 9 - AI Lab e fleet
-- formalizar o `ai-lab` como nó da LAN local (`192.168.15.103`) — ver ADR-0007
-- configurar acesso operacional completo do `ai-lab` ao cluster `homelab` (SSH + kubeconfig)
+- ~~formalizar o `ai-lab` como nó da LAN local~~ — **concluído**: IP `192.168.15.103` com DHCP reservado no MitraStar (ver ADR-0007)
+- ~~configurar acesso operacional completo do `ai-lab` ao cluster `homelab` (SSH + kubeconfig)~~ — **concluído**
 - instalar K3s no `ai-lab` e bootstrapar Argo CD
 - ativar `clusters/ai-lab` no repositório GitOps como cluster gerenciado
 - preparar base para gestão multi-cluster (homelab + ai-lab)

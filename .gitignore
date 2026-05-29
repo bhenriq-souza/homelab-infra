@@ -1,5 +1,10 @@
 **/.terraform/*
 
+# Terraform state — gerenciado no GCS (homelab-492918-tf-state), nunca commitar
+**/*.tfstate
+**/*.tfstate.*
+**/tfplan
+
 # Local sensitive credentials (never commit real keys)
 secrets/*/*
 !secrets/README.md

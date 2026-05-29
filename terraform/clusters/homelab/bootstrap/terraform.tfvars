@@ -39,12 +39,20 @@ kubernetes_oidc_issuer_uri     = "https://oidc.homelab.local"
 gcp_manage_project_services    = false
 gcp_manage_secret_iam_bindings = false
 
-# Lista de segredos permitidos para leitura (criados manualmente no GCP).
+# Lista de segredos permitidos para leitura.
+# Utilizado apenas quando gcp_manage_secret_iam_bindings=true para criar bindings IAM por secret.
+# O acesso atual e gerenciado por binding de projeto (homelab-secrets-issuer-dev/prd).
 gcp_allowed_secret_ids = [
   "homelab-dev-postgres-password",
   "homelab-dev-postgres-url",
   "homelab-prd-postgres-password",
-  "homelab-prd-postgres-url"
+  "homelab-prd-postgres-url",
+  # Techlead Joe
+  "tj-postgres-host",
+  "tj-postgres-db",
+  "tj-postgres-user",
+  "tj-postgres-password",
+  "tj-ollama-base-url"
 ]
 
 # Artifact Registry
@@ -60,7 +68,13 @@ github_wif_pool_id     = "github-actions-pool"
 github_wif_provider_id = "github-actions-provider"
 github_organization    = "bhenriq-souza"
 github_allowed_repositories = [
-  "bhenriq-souza/homelab-gitops"
+  # Repos existentes no GCP (sincronizados para evitar remoção ao aplicar)
+  "bhenriq-souza/homelab-gitops",
+  "bhenriq-souza/typescript-common-packages",
+  "bhenriq-souza/ts-express-app",
+  # Techlead Joe
+  "bhenriq-souza/techlead-joe-knowledge-injection-service",
+  "bhenriq-souza/techlead-joe-gitops"
 ]
 github_dev_branches          = ["develop"]
 github_prd_branches          = ["main"]

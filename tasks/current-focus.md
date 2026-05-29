@@ -66,6 +66,7 @@ Implantar uma camada inicial de observabilidade orientada a operacao para o clus
 - abordagem GCP para o `ai-lab` descontinuada apos falha de capacidade de GPU em multiplas regioes (ver `phase-08-ai-lab-gcp-foundation.md`)
 - infraestrutura GCP do `ai-lab` destruida; Terraform em `terraform/clusters/ai-lab/foundation` mantido como referencia historica
 - acesso operacional do AI Lab ao cluster homelab: SSH (`ssh homelab`) + kubeconfig (`~/.kube/config-homelab.yaml`) — validado e operacional
+- reserva DHCP do AI Lab formalizada no roteador MitraStar: IP `192.168.15.103` confirmado como DHCP reservado (concluido)
 - estrutura GitOps `clusters/ai-lab` permanece como scaffold no `homelab-gitops` para quando o K3s for instalado no AI Lab
 - proxima etapa do `ai-lab`: instalar K3s na workstation local e bootstrapar Argo CD (Fase 9)
 

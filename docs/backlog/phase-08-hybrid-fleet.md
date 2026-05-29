@@ -18,9 +18,9 @@ A conectividade entre `ai-lab` e o cluster `homelab` é direta via LAN, sem VPN.
 - naming `cluster-first` consolidado para `homelab` e `ai-lab`
 - acesso do AI Lab ao cluster `homelab`: SSH (`ssh homelab`) + kubeconfig (`~/.kube/config-homelab.yaml`) operacionais
 - funções `use_homelab` / `use_ailab` / `kctx_status` no `~/.zshrc` do AI Lab
+- reserva DHCP do AI Lab formalizada no roteador MitraStar: IP `192.168.15.103` fixado como DHCP reservado
 
 ### Pendente — Fase 9
-- definir reserva DHCP para o AI Lab no roteador (IP `192.168.15.103` já em uso, formalizar a reserva)
 - instalar K3s no AI Lab
 - copiar e ajustar kubeconfig do AI Lab para `~/.kube/config-ai-lab.yaml` no laptop admin
 - bootstrapar Argo CD no cluster `ai-lab`

@@ -27,6 +27,8 @@
 - política de IP estável do mini PC: DHCP reservado
 - hostname do mini PC: `hlb-beelink01`
 - MAC do mini PC: `78:55:36:05:22:CA`
+- política de IP estável do AI Lab: DHCP reservado — reserva formalizada no roteador MitraStar (IP `192.168.15.103`)
+- hostname do AI Lab: a definir (workstation local do operador)
 - origem das reservas: roteador Vivo MitraStar
 - acesso administrativo atual: SSH via LAN para ambos os nós
 

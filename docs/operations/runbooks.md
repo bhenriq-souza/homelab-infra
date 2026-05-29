@@ -154,7 +154,7 @@ Instalar K3s na workstation AI Lab e bootstrapar Argo CD para ativar o cluster c
 
 ### Passos planejados
 
-1. Reservar IP do AI Lab no roteador (formalizar `192.168.15.103` como DHCP reservado)
+1. ~~Reservar IP do AI Lab no roteador~~ — **concluído**: `192.168.15.103` formalizado como DHCP reservado no MitraStar
 2. Instalar K3s na workstation AI Lab
 3. Copiar e ajustar kubeconfig: `~/.kube/config-ai-lab.yaml`
 4. Configurar `use_ailab` no shell do laptop admin
