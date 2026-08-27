@@ -74,7 +74,9 @@ github_allowed_repositories = [
   "bhenriq-souza/ts-express-app",
   # Techlead Joe
   "bhenriq-souza/techlead-joe-knowledge-injection-service",
-  "bhenriq-souza/techlead-joe-gitops"
+  "bhenriq-souza/techlead-joe-gitops",
+  # Finances Control
+  "bhenriq-souza/finances-control-backend"
 ]
 github_dev_branches          = ["develop"]
 github_prd_branches          = ["main"]
