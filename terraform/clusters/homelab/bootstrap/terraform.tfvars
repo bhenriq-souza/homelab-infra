@@ -76,7 +76,8 @@ github_allowed_repositories = [
   "bhenriq-souza/techlead-joe-knowledge-injection-service",
   "bhenriq-souza/techlead-joe-gitops",
   # Finances Control
-  "bhenriq-souza/finances-control-backend"
+  "bhenriq-souza/finances-control-backend",
+  "bhenriq-souza/finances-control-frontend"
 ]
 github_dev_branches          = ["develop"]
 github_prd_branches          = ["main"]
