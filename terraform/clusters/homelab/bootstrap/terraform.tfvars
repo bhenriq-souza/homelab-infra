@@ -77,7 +77,9 @@ github_allowed_repositories = [
   "bhenriq-souza/techlead-joe-gitops",
   # Finances Control
   "bhenriq-souza/finances-control-backend",
-  "bhenriq-souza/finances-control-frontend"
+  "bhenriq-souza/finances-control-frontend",
+  # FT Coders (imagem do orquestrador, spec 0022)
+  "bhenriq-souza/ft-coders"
 ]
 github_dev_branches          = ["develop"]
 github_prd_branches          = ["main"]
