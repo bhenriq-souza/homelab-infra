@@ -7,7 +7,8 @@
 locals {
   ft_coders_orchestrator_secrets = [
     "factory-farmtech-ado-pat",
-    "factory-farmtech-github-token",
+    "factory-farmtech-github-token",    # PAT da Fase 2: sai depois do corte da spec 0029
+    "factory-ftcoders-app-private-key", # chave da GitHub App ft-coders (spec 0029)
     "factory-postgres-password",
   ]
 }
