@@ -78,8 +78,9 @@ github_allowed_repositories = [
   # Finances Control
   "bhenriq-souza/finances-control-backend",
   "bhenriq-souza/finances-control-frontend",
-  # FT Coders (imagem do orquestrador, spec 0022)
-  "bhenriq-souza/ft-coders"
+  # FT Coders (imagem do orquestrador, spec 0022; UI, spec 0007 do ft-coders-frontend)
+  "bhenriq-souza/ft-coders",
+  "bhenriq-souza/ft-coders-frontend"
 ]
 github_dev_branches          = ["develop"]
 github_prd_branches          = ["main"]
